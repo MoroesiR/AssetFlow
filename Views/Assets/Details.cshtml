@@ -1,0 +1,299 @@
+﻿@model AssetFlow.Models.Asset
+
+@{
+    ViewData["Title"] = "Asset Details";
+}
+
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Assets</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol>
+    </nav>
+
+    
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+       
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Asset Information</h4>
+                    <div>
+                        <span class="badge @(Model.Status == "Available" ? "bg-success" :
+                                                                          Model.Status == "CheckedOut" ? "bg-warning" :
+                                                                          Model.Status == "Maintenance" ? "bg-danger" : "bg-secondary")">
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Asset Name</dt>
+                                <dd>@Model.Name</dd>
+
+                                <dt>Serial Number</dt>
+                                <dd><code>@Model.SerialNumber</code></dd>
+
+                                <dt>Category</dt>
+                                <dd><span class="badge bg-secondary">@Model.Category</span></dd>
+
+                                <dt>Purchase Price</dt>
+                                <dd>@Model.PurchasePrice.ToString("C")</dd>
+
+                                <dt>Purchase Date</dt>
+                                <dd>@Model.PurchaseDate.ToString("MMM dd, yyyy")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl>
+                                <dt>Location</dt>
+                                <dd>@(Model.Location ?? "Not specified")</dd>
+
+                                <dt>Vendor</dt>
+                                <dd>@(Model.Vendor ?? "Not specified")</dd>
+
+                                <dt>Warranty Expiry</dt>
+                                <dd>
+                                    @if (Model.WarrantyExpiry.HasValue)
+                                    {
+                                        var warrantyClass = Model.IsWarrantyExpired ? "text-danger" : "text-success";
+                                        <span class="@warrantyClass">
+                                            @Model.WarrantyExpiry.Value.ToString("MMM dd, yyyy")
+                                            @if (Model.IsWarrantyExpired)
+                                            {
+                                                <span class="badge bg-danger ms-2">Expired</span>
+                                            }
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Not specified</span>
+                                    }
+                                </dd>
+
+                                <dt>Last Updated</dt>
+                                <dd>@Model.LastUpdated.ToString("MMM dd, yyyy HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                
+                   <!-- Notes -->
+@if (!string.IsNullOrEmpty(Model.Notes))
+{
+    <dt class="mt-3">Notes</dt>
+    <dd class="p-3 bg-light rounded mb-3">@Model.Notes</dd>
+}
+                </div>
+            </div>
+
+            @if (Model.Status == "CheckedOut")
+            {
+                <div class="card mb-4 border-warning">
+                    <div class="card-header bg-warning text-white">
+                        <h5 class="mb-0"><i class="fas fa-sign-out-alt me-2"></i>Checkout Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <dl>
+                                    <dt>Checked Out To</dt>
+                                    <dd>@Model.CheckedOutToEmployee</dd>
+
+                                    <dt>Employee Email</dt>
+                                    <dd>@(Model.EmployeeEmail ?? "Not specified")</dd>
+
+                                    <dt>Department</dt>
+                                    <dd>@(Model.EmployeeDepartment ?? "Not specified")</dd>
+                                </dl>
+                            </div>
+                            <div class="col-md-6">
+                                <dl>
+                                    <dt>Checkout Date</dt>
+                                    <dd>@Model.CheckoutDate?.ToString("MMM dd, yyyy")</dd>
+
+                                    <dt>Expected Return</dt>
+                                    <dd>
+                                        @if (Model.ExpectedReturnDate.HasValue)
+                                        {
+                                            var overdueClass = Model.IsOverdue ? "text-danger fw-bold" : "";
+                                            <span class="@overdueClass">
+                                                @Model.ExpectedReturnDate.Value.ToString("MMM dd, yyyy")
+                                                @if (Model.IsOverdue)
+                                                {
+                                                    <span class="badge bg-danger ms-2">OVERDUE</span>
+                                                }
+                                            </span>
+                                        }
+                                    </dd>
+                                </dl>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.CheckoutNotes))
+                        {
+                            <dt class="mt-3">Checkout Notes</dt>
+                            <dd class="p-3 bg-light rounded mb-3">@Model.CheckoutNotes</dd>
+                        }
+                    </div>
+                </div>
+            }
+
+            
+            @if (!string.IsNullOrEmpty(Model.ConditionNotes) || Model.RequiresMaintenance)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Condition & Maintenance</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.RequiresMaintenance)
+                        {
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>This asset requires maintenance</strong>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.ConditionNotes))
+                        {
+                            <dt>Condition Notes</dt>
+                            <dd class="p-3 bg-light rounded mb-3">@Model.ConditionNotes</dd>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+      
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i>Edit Asset
+                        </a>
+
+                        @if (Model.Status == "Available")
+                        {
+                            <a asp-action="Checkout" asp-route-id="@Model.Id" class="btn btn-success">
+                                <i class="fas fa-sign-out-alt me-1"></i>Checkout Asset
+                            </a>
+                        }
+                        else if (Model.Status == "CheckedOut")
+                        {
+                            <a asp-action="Checkin" asp-route-id="@Model.Id" class="btn btn-warning">
+                                <i class="fas fa-sign-in-alt me-1"></i>Checkin Asset
+                            </a>
+                        }
+
+                        @if (Model.Status != "Maintenance")
+                        {
+                            <a asp-action="MarkMaintenance" asp-route-id="@Model.Id" class="btn btn-outline-warning">
+                                <i class="fas fa-tools me-1"></i>Mark for Maintenance
+                            </a>
+                        }
+                        else
+                        {
+                            <form asp-action="MarkAvailable" method="post">
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <button type="submit" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-check me-1"></i>Mark as Available
+                                </button>
+                            </form>
+                        }
+
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
+                            <i class="fas fa-trash me-1"></i>Delete Asset
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+          
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Status Summary</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Current Status
+                            <span class="badge @(Model.Status == "Available" ? "bg-success" :
+                                                                                  Model.Status == "CheckedOut" ? "bg-warning" :
+                                                                                  Model.Status == "Maintenance" ? "bg-danger" : "bg-secondary")">
+                                @Model.Status
+                            </span>
+                        </li>
+
+                        @if (Model.IsOverdue)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center text-danger">
+                                <span><i class="fas fa-exclamation-triangle me-1"></i>Overdue</span>
+                                <span class="badge bg-danger">YES</span>
+                            </li>
+                        }
+
+                        @if (Model.IsWarrantyExpired)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center text-danger">
+                                <span><i class="fas fa-exclamation-triangle me-1"></i>Warranty Expired</span>
+                                <span class="badge bg-danger">YES</span>
+                            </li>
+                        }
+
+                        @if (Model.RequiresMaintenance)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center text-warning">
+                                <span><i class="fas fa-tools me-1"></i>Maintenance Required</span>
+                                <span class="badge bg-warning">YES</span>
+                            </li>
+                        }
+
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Asset Age
+                            <span>@((DateTime.Now - Model.PurchaseDate).Days) days</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="mt-4">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Assets List
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    </script>
+}

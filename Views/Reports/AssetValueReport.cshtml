@@ -1,0 +1,148 @@
+﻿@{
+    ViewData["Title"] = "Asset Value Report";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0"><i class="fas fa-chart-pie text-primary me-2"></i>Asset Value Report</h1>
+            <p class="text-muted mb-0">Total asset value by category</p>
+        </div>
+        <div>
+            <a asp-controller="Reports" asp-action="ExportAssets" asp-route-format="csv"
+               class="btn btn-success">
+                <i class="fas fa-file-export me-1"></i>Export CSV
+            </a>
+            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Asset Distribution by Category</h5>
+                </div>
+                <div class="card-body">
+                    <div style="height: 300px;">
+                        <canvas id="assetChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-end">Count</th>
+                                    <th class="text-end">Total Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var categories = ViewBag.Categories as List<string>;
+                                    var counts = ViewBag.Counts as List<int>;
+                                    var values = ViewBag.TotalValues as List<decimal>;
+
+                                    if (categories != null)
+                                    {
+                                        for (int i = 0; i < categories.Count; i++)
+                                        {
+                                            <tr>
+                                                <td>@categories[i]</td>
+                                                <td class="text-end">@counts[i]</td>
+                                                <td class="text-end">@values[i].ToString("C")</td>
+                                            </tr>
+                                        }
+                                    }
+                                }
+                            </tbody>
+                            <tfoot class="fw-bold">
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="text-end">@(categories != null ? counts.Sum() : 0)</td>
+                                    <td class="text-end">@(values != null ? values.Sum().ToString("C") : "$0.00")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Print Report</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <p class="mb-0">Generate a printable report of all assets</p>
+                </div>
+                <div>
+                    <button onclick="window.print()" class="btn btn-primary">
+                        <i class="fas fa-print me-1"></i>Print Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var ctx = document.getElementById('assetChart').getContext('2d');
+            var categories = @Html.Raw(Json.Serialize(ViewBag.Categories));
+            var values = @Html.Raw(Json.Serialize(ViewBag.TotalValues));
+
+            var colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                '#9966FF', '#FF9F40', '#8AC926', '#1982C4'
+            ];
+
+            var chart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, categories.length),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var label = context.label || '';
+                                    var value = context.raw || 0;
+                                    var total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    var percentage = Math.round((value / total) * 100);
+                                    return label + ': $' + value.toLocaleString() + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

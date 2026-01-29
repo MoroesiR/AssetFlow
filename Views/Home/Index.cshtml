@@ -1,0 +1,297 @@
+﻿@model AssetFlow.Controllers.HomeViewModel
+
+@{
+    ViewData["Title"] = "AssetFlow - IT Asset Management";
+}
+
+@if (User.Identity.IsAuthenticated)
+{
+   
+    <div class="container-fluid">
+      
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="page-header bg-light p-4 rounded">
+                    <h1 class="h3 mb-2">Welcome back, @User.Identity.Name</h1>
+                    <p class="text-muted mb-0">
+                        IT Asset Management System • @DateTime.Now.ToString("dddd, MMMM dd, yyyy") •
+                        <span class="badge bg-primary">@Model.TotalAssets Total Assets</span>
+                        <span class="badge bg-success ms-2">@Model.AvailableAssets Available</span>
+                        <span class="badge bg-warning ms-2">@Model.CheckedOutAssets Checked Out</span>
+                        @if (Model.OverdueAssets > 0)
+                        {
+                            <span class="badge bg-danger ms-2">@Model.OverdueAssets Overdue</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+
+       
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Add Asset
+                        </h5>
+                        <p class="card-text">Register new equipment or software</p>
+                        <a asp-controller="Assets" asp-action="Create" class="btn btn-primary btn-sm">New Asset</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-success">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">
+                            <i class="fas fa-search me-2"></i>Find Asset
+                        </h5>
+                        <p class="card-text">Search inventory by serial or name</p>
+                        <a asp-controller="Assets" asp-action="Index" class="btn btn-success btn-sm">Browse @Model.TotalAssets Assets</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-warning">
+                    <div class="card-body">
+                        <h5 class="card-title text-warning">
+                            <i class="fas fa-tools me-2"></i>Maintenance
+                        </h5>
+                        <p class="card-text">@Model.MaintenanceAssets assets need attention</p>
+                        <a asp-controller="Assets" asp-action="Index" asp-route-status="Maintenance" class="btn btn-warning btn-sm">View Maintenance</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <h5 class="card-title text-info">
+                            <i class="fas fa-chart-bar me-2"></i>Dashboard
+                        </h5>
+                        <p class="card-text">View detailed analytics & reports</p>
+                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-info btn-sm">Go to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recently Updated Assets</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.RecentAssets.Any())
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var asset in Model.RecentAssets)
+                                {
+                                    <a asp-controller="Assets" asp-action="Details" asp-route-id="@asset.Id"
+                                       class="list-group-item list-group-item-action">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <div class="d-flex align-items-center">
+                                                    @if (asset.Category == "IT Equipment")
+                                                    {
+                                                        <i class="fas fa-laptop text-primary me-2"></i>
+                                                    }
+                                                    else if (asset.Category == "Furniture")
+                                                    {
+                                                        <i class="fas fa-chair text-success me-2"></i>
+                                                    }
+                                                    else if (asset.Category == "AV Equipment")
+                                                    {
+                                                        <i class="fas fa-tv text-warning me-2"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fas fa-box text-secondary me-2"></i>
+                                                    }
+                                                    <div>
+                                                        <h6 class="mb-1">@asset.Name</h6>
+                                                        <small class="text-muted">Serial: @asset.SerialNumber • Category: @asset.Category</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-end">
+                                                <small class="text-muted d-block">@asset.LastUpdated.ToString("MMM dd, h:mm tt")</small>
+                                                <span class="badge @(asset.Status == "Available" ? "bg-success" :
+                                                                                                                          asset.Status == "CheckedOut" ? "bg-warning" :
+                                                                                                                          asset.Status == "Maintenance" ? "bg-danger" : "bg-secondary")">
+                                                    @asset.Status
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>No assets found in the system</p>
+                                <a asp-controller="Assets" asp-action="Create" class="btn btn-primary btn-sm">Add Your First Asset</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+              
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Database Connection</small>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2 text-success"><i class="fas fa-circle"></i></div>
+                                <span>Connected (@Model.TotalAssets records)</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted d-block">Asset Distribution</small>
+                            <div class="small">
+                                <div class="d-flex justify-content-between">
+                                    <span>Available</span>
+                                    <span class="fw-medium">@Model.AvailableAssets</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Checked Out</span>
+                                    <span class="fw-medium">@Model.CheckedOutAssets</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Maintenance</span>
+                                    <span class="fw-medium">@Model.MaintenanceAssets</span>
+                                </div>
+                            </div>
+                        </div>
+                        @if (Model.OverdueAssets > 0)
+                        {
+                            <div class="mb-3">
+                                <small class="text-muted d-block">Urgent Attention Needed</small>
+                                <div class="alert alert-danger py-2 mb-0">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    <strong>@Model.OverdueAssets asset(s) overdue</strong>
+                                </div>
+                            </div>
+                        }
+                        <div class="mb-0">
+                            <small class="text-muted d-block">Last Data Refresh</small>
+                            <span>@DateTime.Now.ToString("h:mm tt")</span>
+                        </div>
+                    </div>
+                </div>
+
+              
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h6 class="card-title">Quick Actions</h6>
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Assets" asp-action="Create" class="btn btn-outline-primary btn-sm text-start">
+                                <i class="fas fa-plus me-2"></i>Add New Asset
+                            </a>
+                            <a asp-controller="Assets" asp-action="Index" class="btn btn-outline-secondary btn-sm text-start">
+                                <i class="fas fa-list me-2"></i>View All Assets
+                            </a>
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm text-start">
+                                <i class="fas fa-chart-bar me-2"></i>View Analytics
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+   
+    <div class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6">
+                <div class="card border-0 shadow">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                                 style="width: 60px; height: 60px;">
+                                <i class="fas fa-boxes fa-2x"></i>
+                            </div>
+                            <h2 class="mt-3 mb-1">AssetFlow</h2>
+                            <p class="text-muted">IT Asset Management Portal</p>
+                        </div>
+
+                        <div class="text-center mb-4">
+                            <p class="mb-0">Please sign in to access the asset management system.</p>
+                            <small class="text-muted">Restricted to company employees only</small>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Employee Login
+                            </a>
+
+                            <div class="text-center">
+                                <small class="text-muted">New employee? Contact IT department for access</small>
+                            </div>
+
+                            <hr />
+
+                            <div class="text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    For technical assistance, contact:
+                                    <strong>IT Help Desk • Ext. 4357 • helpdesk@company.com</strong>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+              
+                <div class="text-center mt-4">
+                    <p class="text-muted small">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        Secure connection • Company Internal Use Only • v2.1.4
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .page-header {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .card {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .card-header {
+        background-color: #f8f9fa !important;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .list-group-item {
+        border-left: 0;
+        border-right: 0;
+        padding: 0.75rem 0;
+    }
+
+        .list-group-item:first-child {
+            border-top: 0;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: 0;
+        }
+</style>

@@ -1,0 +1,308 @@
+﻿@model AssetFlow.Controllers.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Asset Management Dashboard";
+}
+
+<div class="container-fluid">
+  
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Asset Management Dashboard</h1>
+            <p class="text-muted mb-0">@DateTime.Now.ToString("dddd, MMMM dd, yyyy") • Real-time Metrics</p>
+        </div>
+        <div>
+            <a asp-controller="Assets" asp-action="Create" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add New Asset
+            </a>
+        </div>
+    </div>
+
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-start border-primary border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Assets</h6>
+                            <h3 class="mb-0">@Model.TotalAssets</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-boxes fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Value: @Model.TotalAssetValue.ToString("C")</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-start border-success border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Available</h6>
+                            <h3 class="mb-0">@Model.AvailableAssets</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Ready for assignment</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-start border-warning border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Checked Out</h6>
+                            <h3 class="mb-0">@Model.CheckedOutAssets</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-sign-out-alt fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">@Model.OverdueAssets overdue</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card border-start border-danger border-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-2">Maintenance</h6>
+                            <h3 class="mb-0">@Model.MaintenanceAssets</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-tools fa-2x text-danger"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">@Model.MaintenanceNeeded require attention</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
+    <div class="row mb-4">
+        @if (Model.OverdueAssets > 0)
+        {
+            <div class="col-md-6">
+                <div class="card border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Overdue Assets (@Model.OverdueAssets)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var asset in Model.OverdueAssetsList)
+                            {
+                                <a asp-controller="Assets" asp-action="Details" asp-route-id="@asset.Id"
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@asset.Name</h6>
+                                        <small class="text-danger">OVERDUE</small>
+                                    </div>
+                                    <p class="mb-1">Checked out to: @asset.CheckedOutToEmployee</p>
+                                    <small>Due: @asset.ExpectedReturnDate?.ToString("MMM dd, yyyy")</small>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model.WarrantyExpiring > 0)
+        {
+            <div class="col-md-6">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning">
+                        <h6 class="mb-0"><i class="fas fa-calendar-times me-2"></i>Warranty Expiring Soon (@Model.WarrantyExpiring)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var asset in Model.WarrantyExpiringList)
+                            {
+                                <a asp-controller="Assets" asp-action="Details" asp-route-id="@asset.Id"
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@asset.Name</h6>
+                                        <small class="text-warning">Expires @asset.WarrantyExpiry?.ToString("MMM dd")</small>
+                                    </div>
+                                    <p class="mb-1">@asset.Category • @asset.SerialNumber</p>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+  
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recently Updated Assets</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.RecentAssets.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Asset</th>
+                                        <th>Status</th>
+                                        <th>Last Updated</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var asset in Model.RecentAssets)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="me-2">
+                                                        @if (asset.Category == "IT Equipment")
+                                                        {
+                                                            <i class="fas fa-laptop text-primary"></i>
+                                                        }
+                                                        else if (asset.Category == "Furniture")
+                                                        {
+                                                            <i class="fas fa-chair text-success"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="fas fa-box text-secondary"></i>
+                                                        }
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">@asset.Name</div>
+                                                        <small class="text-muted">@asset.SerialNumber</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge @(asset.Status == "Available" ? "bg-success" :
+                                                                                                                          asset.Status == "CheckedOut" ? "bg-warning" :
+                                                                                                                          "bg-danger")">
+                                                    @asset.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">@asset.LastUpdated.ToString("MM/dd HH:mm")</small>
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-controller="Assets" asp-action="Details" asp-route-id="@asset.Id"
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p>No assets found</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-tools me-2"></i>Maintenance Required</h6>
+                </div>
+                <div class="card-body">
+                    @if (Model.MaintenanceAssetsList.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var asset in Model.MaintenanceAssetsList)
+                            {
+                                <a asp-controller="Assets" asp-action="Details" asp-route-id="@asset.Id"
+                                   class="list-group-item list-group-item-action">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-exclamation-triangle text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">@asset.Name</div>
+                                            <small class="text-muted">@asset.Category</small>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3 text-muted">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p>No maintenance required</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Asset Distribution</h6>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>IT Equipment</small>
+                            <small>@Model.RecentAssets.Count(a => a.Category == "IT Equipment")</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: @((Model.RecentAssets.Count(a => a.Category == "IT Equipment") * 100) / Math.Max(1, Model.RecentAssets.Count))%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Furniture</small>
+                            <small>@Model.RecentAssets.Count(a => a.Category == "Furniture")</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 style="width: @((Model.RecentAssets.Count(a => a.Category == "Furniture") * 100) / Math.Max(1, Model.RecentAssets.Count))%"></div>
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Other</small>
+                            <small>@Model.RecentAssets.Count(a => a.Category != "IT Equipment" && a.Category != "Furniture")</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-info" role="progressbar"
+                                 style="width: @((Model.RecentAssets.Count(a => a.Category != "IT Equipment" && a.Category != "Furniture") * 100) / Math.Max(1, Model.RecentAssets.Count))%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

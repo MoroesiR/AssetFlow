@@ -1,0 +1,86 @@
+﻿@model AssetFlow.Models.Asset
+
+@{
+    ViewData["Title"] = "Checkin Asset";
+}
+
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-action="Index">Assets</a></li>
+            <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.Id">@Model.Name</a></li>
+            <li class="breadcrumb-item active">Checkin</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Checkin Asset</h4>
+                </div>
+                <div class="card-body">
+                    
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading">Checkout Details</h5>
+                        <p class="mb-1"><strong>Asset:</strong> @Model.Name (@Model.SerialNumber)</p>
+                        <p class="mb-1"><strong>Checked out to:</strong> @Model.CheckedOutToEmployee</p>
+                        <p class="mb-1"><strong>Email:</strong> @Model.EmployeeEmail</p>
+                        <p class="mb-1"><strong>Department:</strong> @Model.EmployeeDepartment</p>
+                        <p class="mb-1"><strong>Checkout date:</strong> @Model.CheckoutDate?.ToString("MMM dd, yyyy")</p>
+                        <p class="mb-0"><strong>Expected return:</strong> @Model.ExpectedReturnDate?.ToString("MMM dd, yyyy")</p>
+                    </div>
+
+                    <form asp-action="Checkin">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-4">
+                            <h5 class="mb-3">Condition Assessment</h5>
+
+                            <div class="mb-3">
+                                <label asp-for="ConditionNotes" class="form-label">Condition Notes *</label>
+                                <textarea asp-for="ConditionNotes" class="form-control" rows="4" required
+                                          placeholder="Describe the asset's condition upon return. Note any damage, scratches, missing parts, etc."></textarea>
+                                <span asp-validation-for="ConditionNotes" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input asp-for="RequiresMaintenance" class="form-check-input" type="checkbox" />
+                                <label asp-for="RequiresMaintenance" class="form-check-label">
+                                    <strong>Asset requires maintenance/repair</strong>
+                                </label>
+                                <div class="form-text">If checked, asset will be marked as "Maintenance" instead of "Available"</div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Important</h6>
+                            <p class="mb-0">
+                                By checking in this asset, you confirm that:
+                                <ul class="mb-0">
+                                    <li>You have physically received the asset</li>
+                                    <li>You have assessed the asset's condition</li>
+                                    <li>Any issues have been noted above</li>
+                                    <li>The asset will be stored in its designated location</li>
+                                </ul>
+                            </p>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i>Confirm Checkin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

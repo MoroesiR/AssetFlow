@@ -1,0 +1,174 @@
+﻿@model IEnumerable<AssetFlow.Models.Asset>
+
+@{
+    ViewData["Title"] = "Assets Inventory";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Assets Inventory</h1>
+        <p class="text-muted mb-0">Total: @Model.Count() assets registered</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add Asset
+        </a>
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i>Print
+        </button>
+    </div>
+</div>
+
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <form method="get" asp-action="Index" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <small class="text-muted">Filter by:</small>
+            </div>
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" style="width: 150px;">
+                    <option value="">All Status</option>
+                    <option value="Available" selected="@(ViewBag.SelectedStatus == "Available")">Available</option>
+                    <option value="CheckedOut" selected="@(ViewBag.SelectedStatus == "CheckedOut")">Checked Out</option>
+                    <option value="Maintenance" selected="@(ViewBag.SelectedStatus == "Maintenance")">Maintenance</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select name="category" class="form-select form-select-sm" style="width: 150px;">
+                    <option value="">All Categories</option>
+                    <option value="IT Equipment" selected="@(ViewBag.SelectedCategory == "IT Equipment")">IT Equipment</option>
+                    <option value="Furniture" selected="@(ViewBag.SelectedCategory == "Furniture")">Furniture</option>
+                    <option value="AV Equipment" selected="@(ViewBag.SelectedCategory == "AV Equipment")">AV Equipment</option>
+                </select>
+            </div>
+            <div class="col-auto ms-auto">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <input type="text" name="search" class="form-control" placeholder="Search assets..."
+                           value="@ViewBag.SearchTerm">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || !string.IsNullOrEmpty(ViewBag.SelectedStatus) || !string.IsNullOrEmpty(ViewBag.SelectedCategory))
+                    {
+                        <a asp-action="Index" class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 30%">Asset</th>
+                        <th>Serial</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Value</th>
+                        <th>Last Updated</th>
+                        <th class="text-end" style="width: 120px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        @if (item.Category == "IT Equipment")
+                                        {
+                                            <i class="fas fa-laptop text-primary"></i>
+                                        }
+                                        else if (item.Category == "Furniture")
+                                        {
+                                            <i class="fas fa-chair text-success"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-box text-secondary"></i>
+                                        }
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">@item.Name</div>
+                                        <small class="text-muted">@item.Location</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <code class="text-muted">@item.SerialNumber</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">@item.Category</span>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = item.Status switch
+                                    {
+                                        "Available" => "badge bg-success",
+                                        "CheckedOut" => "badge bg-warning",
+                                        "Maintenance" => "badge bg-danger",
+                                        _ => "badge bg-secondary"
+                                    };
+                                }
+                                <span class="@statusClass">@item.Status</span>
+                            </td>
+                            <td class="fw-medium">@item.PurchasePrice.ToString("C")</td>
+                            <td>
+                                <small class="text-muted">@item.LastUpdated.ToString("MM/dd/yy")</small>
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info" title="Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="text-center py-5">
+        <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No assets found</h4>
+        <p class="text-muted">Get started by adding your first asset to the inventory.</p>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add First Asset
+        </a>
+    </div>
+}
+
+
+<div class="mt-3 text-muted small">
+    <div class="d-flex justify-content-between">
+        <div>
+            <i class="fas fa-info-circle me-1"></i>
+            Showing @Model.Count() assets •
+            Total Value: @Model.Sum(a => a.PurchasePrice).ToString("C")
+        </div>
+        <div>
+            <i class="fas fa-database me-1"></i>
+            System ID: INV-@DateTime.Now.ToString("yyyyMMdd")
+        </div>
+    </div>
+</div>

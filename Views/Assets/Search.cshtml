@@ -1,0 +1,64 @@
+﻿@model IEnumerable<AssetFlow.Models.Asset>
+
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="card-title">
+                        <i class="fas fa-search me-2"></i>Search Results
+                    </h4>
+                    <p class="card-text">
+                        Found @Model.Count() assets matching "<strong>@ViewBag.SearchQuery</strong>"
+                    </p>
+
+                    <form method="get" asp-action="Search" class="mt-3">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control"
+                                   placeholder="Search assets..." value="@ViewBag.SearchQuery">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="list-group">
+                    @foreach (var asset in Model)
+                    {
+                        <a asp-action="Details" asp-route-id="@asset.Id"
+                           class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@asset.Name</h5>
+                                <small class="text-muted">@asset.Category</small>
+                            </div>
+                            <p class="mb-1">
+                                <strong>Serial:</strong> @asset.SerialNumber •
+                                <strong>Location:</strong> @asset.Location
+                            </p>
+                            <span class="badge @(asset.Status == "Available" ? "bg-success" :
+                                                                                  asset.Status == "CheckedOut" ? "bg-warning" : "bg-danger")">
+                                @asset.Status
+                            </span>
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No results found</h4>
+                    <p class="text-muted">Try searching with different keywords</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
