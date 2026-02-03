@@ -1,3 +1,6 @@
+wwwroot/* linguist-vendored
+
 *.cs linguist-detectable=true
-   *.cshtml linguist-detectable=true
-   *.csproj linguist-detectable=true
+*.cshtml linguist-language=C#
+
+*.md linguist-documentation
