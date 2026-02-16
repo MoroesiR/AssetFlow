@@ -49,12 +49,21 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 
 ## Screenshots
 
-[Add these - important!]
 - Home page with quick actions
+  <img width="1867" height="907" alt="image" src="https://github.com/user-attachments/assets/124cc937-be8b-49ab-864b-bd6008ba9a23" />
+
 - Dashboard with charts
+  <img width="1869" height="901" alt="image" src="https://github.com/user-attachments/assets/496d1bc8-f2b1-44aa-a9d9-074f27b64d19" />
+
 - Assets inventory view
+  <img width="1844" height="903" alt="image" src="https://github.com/user-attachments/assets/d9e90e8d-0fa7-41d1-89d9-ff6cbe349ebf" />
+
 - Maintenance schedule with overdue items
+  <img width="1862" height="676" alt="Screenshot 2026-02-16 085410" src="https://github.com/user-attachments/assets/260c2825-52ee-4636-b262-dfedb593fd6f" />
+
 - API documentation page
+  <img width="1855" height="846" alt="image" src="https://github.com/user-attachments/assets/3c7f46db-af2a-4ae9-b396-536ff327cc65" />
+
 
 ## Tech Stack
 
