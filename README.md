@@ -1,197 +1,209 @@
 # AssetFlow - IT Asset Management System
 
-## Project Overview
-AssetFlow is a comprehensive web-based system for tracking and managing IT equipment within organizations. Built with ASP.NET Core MVC, this application helps companies manage hardware inventory, track checkouts, schedule maintenance, and generate reports.
+A web-based system for tracking IT equipment, managing checkouts, and scheduling maintenance. Built with ASP.NET Core MVC as part of my journey learning full-stack development.
 
-While developed as a portfolio project to showcase my full-stack ASP.NET Core skills, every feature was designed with real organizational needs in mind. The system addresses common business challenges around asset tracking and demonstrates my ability to build professional-grade software solutions.
+<img width="1867" height="907" alt="image" src="https://github.com/user-attachments/assets/88d0fed0-9ebc-4274-bda1-82132c7a6489" />
 
-## Project Background
 
-### The Problem
-Many organizations struggle with tracking IT equipment, managing employee checkouts, and scheduling preventive maintenance. Manual processes and spreadsheets often lead to errors, lost assets, and operational inefficiencies.
+## Why I Built This
 
-### The Solution
-AssetFlow provides a professional web-based solution for comprehensive asset management. This project represents my journey in learning ASP.NET Core while focusing on building something that could actually be used in a business environment.
+At my current workplace, I saw how much time gets wasted tracking equipment manually - who has what laptop, when was the last printer maintenance, which projector is available for the conference room. I thought, "there has to be a better way to do this," so I built one.
 
-### What This Demonstrates
-Beyond technical skills, this project shows my ability to:
-- Identify inefficiencies in current business processes
-- Design intuitive solutions that users will actually adopt
-- Implement robust systems that handle real business logic
-- Create professional documentation and user interfaces
+This project helped me learn ASP.NET Core while solving a real problem. Every feature here came from thinking about actual IT department workflows.
 
-## Features
+## What It Does
 
-### Core Functionality
-- Complete asset lifecycle management (add, update, track, retire)
-- Employee checkout system with automated status tracking
-- Maintenance scheduling and tracking
-- Comprehensive reporting and analytics
-- User authentication and role management
+### Current Features
 
-### Asset Management
-- Full CRUD operations for IT assets
-- Categorization (Laptops, Servers, Networking, AV Equipment, etc.)
-- Serial number tracking with duplicate prevention
-- Purchase details including price, date, vendor, and warranty
-- Location tracking and status management
+**Asset Management**
+- Add new equipment with details (serial number, category, purchase info, warranty dates)
+- Track location and status of all assets
+- Prevents duplicate serial numbers
+- Categories include IT Equipment, Furniture, AV Equipment, Office Supplies
 
-### Checkout System
-- Employee checkout tracking with department information
-- Automated status updates (Available → Checked Out → Available)
-- Expected return dates with overdue indicators
-- Condition notes and maintenance flagging during returns
-- Complete checkout history for audit purposes
+**Check-In/Check-Out System**
+- Admin checks out assets to employees
+- Tracks who has what, from which department
+- Shows expected return dates with overdue indicators (the red "17 days overdue" warning you see in screenshots)
+- Admin marks condition when equipment comes back
+- Flags items that need maintenance during return
 
-### Maintenance Management
-- Scheduled maintenance with due date tracking
-- Condition assessment during check-in
-- Maintenance notes and repair history
-- Visual indicators for overdue maintenance
-- Quick status toggling between maintenance and available states
+**Maintenance Tracking**
+- Schedule maintenance with due dates
+- Color-coded urgency (red = overdue, coming soon: yellow for due soon)
+- Track maintenance history and notes
+- Quick toggle between maintenance and available status
 
-### Reporting & Analytics
-- Asset value reports by category with data visualization
-- Checkout history with customizable date ranges
-- Maintenance schedules with color-coded urgency indicators
-- CSV export functionality for external analysis
-- Print-friendly report layouts
+**Dashboard & Reports**
+- Real-time metrics (total assets, available count, checked out, needing maintenance)
+- Asset value calculations by category with chart visualization
+- Checkout history with date ranges
+- Maintenance schedule showing overdue items
+- Export data functionality
 
-### API & Integration
-- RESTful API endpoints for programmatic access
-- Swagger/OpenAPI documentation with interactive testing
-- JSON responses for integration with other systems
-- Search and filter capabilities via API
+**API Access**
+- RESTful endpoints for all major operations
+- Swagger/OpenAPI documentation for testing
+- Search and filter capabilities
+- JSON responses for potential integrations
 
-### User Experience
-- Responsive design that works on desktop and mobile devices
-- Clean, professional interface with custom CSS styling
-- Real-time status updates and intuitive workflows
-- Efficient navigation and bulk operation support
+## Screenshots
 
-## Technology Stack
+[Add these - important!]
+- Home page with quick actions
+- Dashboard with charts
+- Assets inventory view
+- Maintenance schedule with overdue items
+- API documentation page
 
-### Backend
-- ASP.NET Core 8.0 - Modern web framework
-- Entity Framework Core - Object-relational mapping
-- SQL Server - Primary database (with SQLite for development)
-- ASP.NET Core Identity - Authentication and authorization
-- Swashbuckle/Swagger - API documentation
+## Tech Stack
 
-### Frontend
-- Razor Pages with C# server-side rendering
-- Bootstrap 5 - Responsive layout foundation
-- Custom CSS - Professional styling and theming
-- Chart.js - Data visualization for reports
-
-### Development Tools
-- Visual Studio 2022 - Primary development environment
-- Git - Version control
-- SQL Server Management Studio - Database management
-- Package Manager Console - NuGet package management
+- **Backend:** ASP.NET Core 8.0, C#
+- **Database:** SQL Server (SQLite for dev/testing)
+- **ORM:** Entity Framework Core
+- **Auth:** ASP.NET Core Identity
+- **Frontend:** Razor Pages, Bootstrap 5, custom CSS
+- **Charts:** Chart.js for data visualization
+- **API Docs:** Swashbuckle/Swagger
 
 ## Getting Started
 
 ### Prerequisites
 - .NET 8.0 SDK
+- SQL Server (or use SQLite for quick testing)
 - Visual Studio 2022 or VS Code
-- SQL Server (or SQLite for development)
 
-### Installation Steps
-1. Clone the repository
-   ```bash
-   git clone https://github.com/MoroesiR/assetflow.git
-   cd assetflow
-Set up the database
+### Installation
 
-bash
-# Apply migrations
+1. Clone the repo
+```bash
+git clone https://github.com/MoroesiR/assetflow.git
+cd assetflow
+```
+
+2. Update the database
+```bash
 dotnet ef database update
-Configure the connection string
+```
 
-Update appsettings.json with your database connection
-
-SQLite is pre-configured for development use
-
-Run the application
-
-bash
+3. Run the application
+```bash
 dotnet run
-# Or run from Visual Studio with F5
-Access the application
+```
+Or just hit F5 in Visual Studio
 
-Open https://localhost:5001 in your browser
+4. Open your browser to `https://localhost:5001`
 
-Default demo credentials:
+### Demo Login
+- **Email:** admin@gmail.com
+- **Password:** Admin@123
 
-Email: admin@gmail.com
+(Obviously change these in production!)
 
-Password: Admin@123
+## Current Limitations & Known Issues
 
-### First-Time Setup
-Register a new user account or use demo credentials
+Right now, this is an admin-only system. The admin does everything - check-in, check-out, maintenance scheduling. 
 
-Add your first asset using the "Add Asset" button
+**Known limitations:**
+- No role-based access control yet (working on this - see Future Features)
+- No email notifications for overdue items
+- Can't reserve equipment in advance
+- Maintenance schedule doesn't auto-generate recurring tasks
+- No bulk import for adding multiple assets at once
 
-Explore the dashboard for system overview
+## Future Features
 
-Test the checkout process with sample data
+I'm planning to add these next:
 
-Generate reports to see data visualization in action
+### Phase 1: Multi-Role System (In Progress)
+- **Regular Users** (employees from different departments)
+  - Browse available assets
+  - Submit checkout requests
+  - View their current checkouts
+  - See request status (pending/approved/rejected)
+  
+- **Admin/IT Department**
+  - Receive and approve/reject requests
+  - Get notifications when requests come in
+  - Assign assets and track who has what
+  - All current admin capabilities
 
-### What I Learned
+### Phase 2: Enhanced Features
+- Email notifications (overdue items, approved requests, maintenance reminders)
+- Equipment reservation system (book for future dates)
+- Recurring maintenance schedules
+- Bulk asset import via CSV
+- Advanced search and filtering
+- Mobile-responsive improvements
 
-## Technical Skills Developed
-Full-stack development with ASP.NET Core MVC
+### Phase 3: Reporting & Analytics
+- Usage reports (which equipment gets checked out most)
+- Department-wise asset distribution
+- Cost tracking and depreciation
+- Custom report builder
 
-Database design and Entity Framework migrations
+## What I Learned Building This
 
-REST API design and documentation with Swagger
+**Technical stuff:**
+- Entity Framework relationships are trickier than they look - spent a whole afternoon figuring out why my cascade deletes weren't working
+- ASP.NET Identity is powerful but the documentation assumes you know more than you do
+- State management for the asset lifecycle (Available → Checked Out → Maintenance → Available) needed more thought than I expected
+- Swagger is amazing for API testing - wish I'd set it up earlier
+- Bootstrap is great until you need something custom, then you're writing CSS anyway
 
-Authentication implementation with ASP.NET Identity
+**Design decisions:**
+- Started with too many features in mind, had to scale back to get something working first
+- User workflows are harder to design than the actual code
+- Validation is boring but absolutely necessary (learned this when test data broke everything)
+- Color coding makes a huge difference in usability
 
-Responsive UI design with Bootstrap and custom CSS
+**Challenges I overcame:**
+- Figuring out how to prevent duplicate serial numbers while still allowing edits
+- Making the checkout history show actual return status (not just dates)
+- Getting the maintenance "days overdue" calculation to work properly
+- Chart.js integration took longer than expected (JavaScript + Razor Pages = confusion at first)
+- Deployment readiness - had to refactor connection strings and configurations
 
-Reporting and data visualization implementation
+## Project Structure
 
-Development Process Insights
-Feature prioritization for minimum viable product
+```
+AssetFlow/
+├── Controllers/         # MVC controllers and API endpoints
+├── Models/             # Entity models and ViewModels
+├── Views/              # Razor views for UI
+├── Data/               # Database context and migrations
+├── wwwroot/            # Static files (CSS, JS, images)
+└── appsettings.json    # Configuration
+```
 
-User workflow design based on real business needs
+## Why This Project Matters
 
-Error handling and user feedback implementation
+Beyond just being a portfolio piece, I built this to demonstrate that I can:
+- Identify real business problems and design solutions
+- Build full-stack applications from database to UI
+- Create systems that people would actually want to use
+- Write clean, maintainable code
+- Think about user experience, not just functionality
 
-Code organization for maintainability
+This system could legitimately be used by a small-to-medium business IT department today. The multi-role feature I'm adding will make it even more practical.
 
-Importance of documentation throughout development
+## Live Demo
 
-## Challenges Overcome
-Complex state management for asset lifecycle tracking
+[Coming soon - will deploy once the request system is complete]
 
-Data validation across multiple related fields
+## Contact
 
-User interface design for non-technical users
+**Cassie (Moroesi Mavundla)**
+- Email: mavundlamoroesi@gmail.com
+- GitHub: [@MoroesiR](https://github.com/MoroesiR)
+- Location: Durban, South Africa
+- Currently: Junior Software Developer, open to remote opportunities
 
-Database relationship design for audit trails
+## License
 
-API design considerations for potential integration
+This project is open source and available under the MIT License.
 
-### About the Developer
-Background
-I'm a junior software developer from South Africa passionate about building practical solutions with modern technologies. This project represents my journey in mastering ASP.NET Core and full-stack web development.
+---
 
-### Skills Demonstrated
-ASP.NET Core MVC development
-
-Database design with Entity Framework
-
-REST API implementation
-
-Professional UI/UX design
-
-Problem-solving and system design
-
-### Contact
-Email: mavundlamoroesi@gmail.com
-
-GitHub: https://github.com/MoroesiR
+*Built with C# and way too much coffee ☕*
+*Current Version: 2.1.4*
