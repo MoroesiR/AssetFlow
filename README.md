@@ -36,10 +36,12 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 
 **Dashboard & Reports**
 - Real-time metrics (total assets, available count, checked out, needing maintenance)
-- Asset value calculations by category with chart visualization
+- Asset value by category with interactive pie chart visualization
+- Summary table showing count and total value per category
+- Export to CSV for external analysis
+- Print-friendly report generation
 - Checkout history with date ranges
 - Maintenance schedule showing overdue items
-- Export data functionality
 
 **API Access**
 - RESTful endpoints for all major operations
@@ -54,6 +56,9 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 
 - Dashboard with charts
   <img width="1869" height="901" alt="image" src="https://github.com/user-attachments/assets/496d1bc8-f2b1-44aa-a9d9-074f27b64d19" />
+
+  <img width="1885" height="724" alt="Screenshot 2026-02-16 090155" src="https://github.com/user-attachments/assets/d500535a-e46f-46d7-9e30-15b0bd437d1e" />
+
 
 - Assets inventory view
   <img width="1844" height="903" alt="image" src="https://github.com/user-attachments/assets/d9e90e8d-0fa7-41d1-89d9-ff6cbe349ebf" />
@@ -107,7 +112,6 @@ Or just hit F5 in Visual Studio
 - **Email:** admin@gmail.com
 - **Password:** Admin@123
 
-(Obviously change these in production!)
 
 ## Current Limitations & Known Issues
 
@@ -145,11 +149,13 @@ I'm planning to add these next:
 - Advanced search and filtering
 - Mobile-responsive improvements
 
-### Phase 3: Reporting & Analytics
-- Usage reports (which equipment gets checked out most)
-- Department-wise asset distribution
-- Cost tracking and depreciation
-- Custom report builder
+### Phase 3: Advanced Analytics
+- Usage analytics (most/least used equipment, utilization rates)
+- Department-wise asset allocation reports
+- Depreciation tracking and asset lifecycle costs
+- Checkout trends over time (monthly/quarterly graphs)
+- Custom report builder with user-defined filters
+- Equipment idle time analysis
 
 ## What I Learned Building This
 
