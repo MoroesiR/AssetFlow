@@ -208,7 +208,7 @@ This system could legitimately be used by a small-to-medium business IT departme
 
 ## Contact
 
-**Cassie (Moroesi Mavundla)**
+**Moroesi Ramodupi**
 - Email: mavundlamoroesi@gmail.com
 - GitHub: [@MoroesiR](https://github.com/MoroesiR)
 - Location: Durban, South Africa
