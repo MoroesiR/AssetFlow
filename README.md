@@ -209,7 +209,7 @@ This system could legitimately be used by a small-to-medium business IT departme
 ## Contact
 
 **Moroesi Ramodupi**
-- Email: mavundlamoroesi@gmail.com
+- Email: moroesiramodupi@gmail.com
 - GitHub: [@MoroesiR](https://github.com/MoroesiR)
 - Location: Durban, South Africa
 - Currently: Junior Software Developer, open to remote opportunities
