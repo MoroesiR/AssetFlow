@@ -1,0 +1,161 @@
+@model IEnumerable<AssetFlow.Models.AssetRequest>
+
+@{
+    ViewData["Title"] = "Request Queue";
+    var selected = ViewBag.SelectedStatus as string ?? "Pending";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Request Queue</h1>
+        <p class="text-muted mb-0">Employee requests waiting on the IT department</p>
+    </div>
+    <div>
+        <a asp-controller="Assets" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="fas fa-box me-1"></i>Inventory
+        </a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-1"></i>@TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-1"></i>@TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body dashboard-stat stat-warning">
+                <small class="text-muted d-block">Pending</small>
+                <h3 class="mb-0">@ViewBag.PendingCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body dashboard-stat stat-success">
+                <small class="text-muted d-block">Approved</small>
+                <h3 class="mb-0">@ViewBag.ApprovedCount</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body dashboard-stat stat-danger">
+                <small class="text-muted d-block">Rejected</small>
+                <h3 class="mb-0">@ViewBag.RejectedCount</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex gap-2 align-items-center">
+            <small class="text-muted me-2">Show:</small>
+            <a asp-action="Index" asp-route-status="Pending" class="btn btn-sm @(selected == "Pending" ? "btn-primary" : "btn-outline-secondary")">Pending</a>
+            <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(selected == "Approved" ? "btn-primary" : "btn-outline-secondary")">Approved</a>
+            <a asp-action="Index" asp-route-status="Rejected" class="btn btn-sm @(selected == "Rejected" ? "btn-primary" : "btn-outline-secondary")">Rejected</a>
+            <a asp-action="Index" asp-route-status="Cancelled" class="btn btn-sm @(selected == "Cancelled" ? "btn-primary" : "btn-outline-secondary")">Cancelled</a>
+            <a asp-action="Index" asp-route-status="All" class="btn btn-sm @(selected == "All" ? "btn-primary" : "btn-outline-secondary")">All</a>
+        </div>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Requested By</th>
+                            <th>Equipment</th>
+                            <th>Dates Needed</th>
+                            <th>Waiting</th>
+                            <th>Status</th>
+                            <th class="text-end" style="width: 150px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-medium">@request.RequesterName</div>
+                                    <small class="text-muted">@request.RequesterDepartment</small>
+                                </td>
+                                <td>
+                                    <div>@(request.Asset?.Name ?? "Removed asset")</div>
+                                    <small class="text-muted">@request.Asset?.SerialNumber</small>
+                                </td>
+                                <td>
+                                    <small>
+                                        @request.NeededFrom.ToString("dd MMM") - @request.NeededUntil.ToString("dd MMM yyyy")
+                                        <span class="text-muted d-block">@request.DaysRequested day(s)</span>
+                                    </small>
+                                </td>
+                                <td>
+                                    @{
+                                        var waitingDays = (DateTime.Today - request.RequestedOn.Date).Days;
+                                    }
+                                    @if (request.Status == "Pending" && waitingDays >= 3)
+                                    {
+                                        <span class="badge bg-danger">@waitingDays day(s)</span>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">@request.RequestedOn.ToString("dd MMM")</small>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = request.Status switch
+                                        {
+                                            "Approved" => "badge bg-success",
+                                            "Pending" => "badge bg-warning",
+                                            "Rejected" => "badge bg-danger",
+                                            _ => "badge bg-secondary"
+                                        };
+                                    }
+                                    <span class="@statusClass">@request.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a asp-action="Details" asp-route-id="@request.Id" class="btn btn-outline-info" title="Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        @if (request.Status == "Pending")
+                                        {
+                                            <a asp-action="Approve" asp-route-id="@request.Id" class="btn btn-outline-success" title="Approve">
+                                                <i class="fas fa-check"></i>
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Queue is empty</h4>
+        <p class="text-muted">Nothing to review under this filter.</p>
+    </div>
+}

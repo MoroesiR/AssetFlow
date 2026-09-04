@@ -10,8 +10,28 @@
     <div class="col-md-4">
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
             <h2>Create a new account.</h2>
+            <p class="text-muted small">
+                New accounts get employee access - browse equipment and submit requests.
+                Admin access is granted by the IT department.
+            </p>
             <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.FullName" class="form-control" autocomplete="name" aria-required="true" placeholder="Jane Mokoena" />
+                <label asp-for="Input.FullName">Full Name</label>
+                <span asp-validation-for="Input.FullName" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Input.Department" class="form-label">Department</label>
+                <select asp-for="Input.Department" class="form-select" aria-required="true">
+                    <option value="">-- Select your department --</option>
+                    @foreach (var department in RegisterModel.Departments)
+                    {
+                        <option value="@department">@department</option>
+                    }
+                </select>
+                <span asp-validation-for="Input.Department" class="text-danger"></span>
+            </div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
                 <label asp-for="Input.Email">Email</label>

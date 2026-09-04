@@ -1,0 +1,102 @@
+@model AssetFlow.Models.AssetRequest
+
+@{
+    ViewData["Title"] = "Request Equipment";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Request Equipment</h1>
+        <p class="text-muted mb-0">IT reviews every request before the item is handed over</p>
+    </div>
+    <a asp-action="Browse" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Equipment
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-paper-plane me-2"></i>Request Details
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+                    <input type="hidden" name="assetId" value="@Model.AssetId" />
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="neededFrom" class="form-label">Needed From</label>
+                            <input type="date" id="neededFrom" name="neededFrom" class="form-control"
+                                   value="@Model.NeededFrom.ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="neededUntil" class="form-label">Return By</label>
+                            <input type="date" id="neededUntil" name="neededUntil" class="form-control"
+                                   value="@Model.NeededUntil.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">What do you need it for?</label>
+                        <textarea id="reason" name="reason" class="form-control" rows="4"
+                                  placeholder="e.g. Client presentation in the boardroom on Thursday" required>@Model.Reason</textarea>
+                        <div class="form-text">
+                            The more specific you are, the quicker IT can approve it.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i>Submit Request
+                        </button>
+                        <a asp-action="Browse" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        @if (Model.Asset != null)
+        {
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-box me-2"></i>Equipment
+                </div>
+                <div class="card-body">
+                    <h5 class="mb-1">@Model.Asset.Name</h5>
+                    <span class="badge bg-light text-dark mb-3">@Model.Asset.Category</span>
+
+                    <dl class="row small mb-0">
+                        <dt class="col-5 text-muted">Serial</dt>
+                        <dd class="col-7"><code>@Model.Asset.SerialNumber</code></dd>
+
+                        <dt class="col-5 text-muted">Location</dt>
+                        <dd class="col-7">@(string.IsNullOrEmpty(Model.Asset.Location) ? "Not recorded" : Model.Asset.Location)</dd>
+
+                        <dt class="col-5 text-muted">Status</dt>
+                        <dd class="col-7"><span class="badge bg-success">@Model.Asset.Status</span></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body small text-muted">
+                    <h6 class="card-title text-dark">What happens next</h6>
+                    <ol class="mb-0 ps-3">
+                        <li>Your request lands in the IT queue</li>
+                        <li>IT approves or rejects it, with a note either way</li>
+                        <li>Once approved the item shows up under My Equipment</li>
+                    </ol>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

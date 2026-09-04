@@ -1,0 +1,89 @@
+@model AssetFlow.Models.AssetRequest
+
+@{
+    ViewData["Title"] = "Approve Request";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Approve Request #@Model.Id</h1>
+        <p class="text-muted mb-0">This checks the asset out to the requester straight away</p>
+    </div>
+    <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-check-circle me-2"></i>Hand Over Details
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <strong>@(Model.Asset?.Name)</strong> will be marked as checked out to
+                    <strong>@Model.RequesterName</strong> (@Model.RequesterDepartment).
+                </div>
+
+                <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                    <div class="mb-3">
+                        <label for="expectedReturnDate" class="form-label">Expected Return Date</label>
+                        <input type="date" id="expectedReturnDate" name="expectedReturnDate" class="form-control"
+                               value="@Model.NeededUntil.ToString("yyyy-MM-dd")" required />
+                        <div class="form-text">
+                            Defaults to the date the employee asked for. Change it if IT needs the item back sooner.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reviewNotes" class="form-label">Notes (optional)</label>
+                        <textarea id="reviewNotes" name="reviewNotes" class="form-control" rows="3"
+                                  placeholder="e.g. Charger and carry case included - collect from the IT office"></textarea>
+                        <div class="form-text">The requester sees this on their request list.</div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-1"></i>Approve and Check Out
+                        </button>
+                        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-clipboard-list me-2"></i>Request Summary
+            </div>
+            <div class="card-body">
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted">Requester</dt>
+                    <dd class="col-7">@Model.RequesterName</dd>
+
+                    <dt class="col-5 text-muted">Department</dt>
+                    <dd class="col-7">@Model.RequesterDepartment</dd>
+
+                    <dt class="col-5 text-muted">Email</dt>
+                    <dd class="col-7">@Model.RequesterEmail</dd>
+
+                    <dt class="col-5 text-muted">Asset</dt>
+                    <dd class="col-7">@Model.Asset?.Name</dd>
+
+                    <dt class="col-5 text-muted">Serial</dt>
+                    <dd class="col-7"><code>@Model.Asset?.SerialNumber</code></dd>
+
+                    <dt class="col-5 text-muted">Needed From</dt>
+                    <dd class="col-7">@Model.NeededFrom.ToString("dd MMM yyyy")</dd>
+
+                    <dt class="col-5 text-muted">Reason</dt>
+                    <dd class="col-7">@Model.Reason</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

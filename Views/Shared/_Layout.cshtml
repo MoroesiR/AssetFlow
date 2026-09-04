@@ -27,22 +27,64 @@
                     <ul class="navbar-nav">
                         @if (User.Identity.IsAuthenticated)
                         {
+                            var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+
                             <li class="nav-item">
-                                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")"
+                                <a class="nav-link @(controller == "Home" ? "active" : "")"
                                    asp-controller="Home" asp-action="Index">
                                     <i class="fas fa-home me-1"></i>Home
                                 </a>
                             </li>
+                        }
+
+                        @* Employees get the request side of the system, nothing else.
+                           The inventory, reports and maintenance screens stay with IT. *@
+                        @if (User.Identity.IsAuthenticated && !User.IsInRole("Admin"))
+                        {
+                            var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+                            var action = ViewContext.RouteData.Values["Action"]?.ToString();
+
                             <li class="nav-item">
-                                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                                <a class="nav-link @(controller == "Requests" && action == "Browse" ? "active" : "")"
+                                   asp-controller="Requests" asp-action="Browse">
+                                    <i class="fas fa-search me-1"></i>Browse Equipment
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(controller == "Requests" && action == "Index" ? "active" : "")"
+                                   asp-controller="Requests" asp-action="Index">
+                                    <i class="fas fa-paper-plane me-1"></i>My Requests
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(controller == "Requests" && action == "MyEquipment" ? "active" : "")"
+                                   asp-controller="Requests" asp-action="MyEquipment">
+                                    <i class="fas fa-laptop me-1"></i>My Equipment
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Admin"))
+                        {
+                            var controller = ViewContext.RouteData.Values["Controller"]?.ToString();
+
+                            <li class="nav-item">
+                                <a class="nav-link @(controller == "Dashboard" ? "active" : "")"
                                    asp-controller="Dashboard" asp-action="Index">
                                     <i class="fas fa-chart-bar me-1"></i>Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Assets" ? "active" : "")"
+                                <a class="nav-link @(controller == "Assets" ? "active" : "")"
                                    asp-controller="Assets" asp-action="Index">
                                     <i class="fas fa-box me-1"></i>Assets
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link @(controller == "RequestQueue" ? "active" : "")"
+                                   asp-controller="RequestQueue" asp-action="Index">
+                                    <i class="fas fa-inbox me-1"></i>Requests
+                                    <vc:pending-request-count></vc:pending-request-count>
                                 </a>
                             </li>
 
@@ -102,7 +144,7 @@
                     <span class="text-muted">
                         <i class="fas fa-building me-1"></i> Company Internal System •
                         <i class="fas fa-shield-alt ms-3 me-1"></i> Restricted Access •
-                        Version 2.1.4
+                        Version 2.2.0
                     </span>
                 </div>
                 <div class="col-auto">

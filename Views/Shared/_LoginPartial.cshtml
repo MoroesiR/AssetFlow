@@ -1,12 +1,26 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using Microsoft.AspNetCore.Identity
+@using AssetFlow.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
+        var currentUser = await UserManager.GetUserAsync(User);
+        var displayName = string.IsNullOrWhiteSpace(currentUser?.FullName) ? User.Identity?.Name : currentUser.FullName;
+
         <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                Hello @displayName!
+                @if (User.IsInRole("Admin"))
+                {
+                    <span class="badge bg-primary ms-1">IT Admin</span>
+                }
+                else if (!string.IsNullOrWhiteSpace(currentUser?.Department))
+                {
+                    <span class="badge bg-secondary ms-1">@currentUser.Department</span>
+                }
+            </a>
         </li>
         <li class="nav-item">
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

@@ -84,7 +84,6 @@ namespace AssetFlow.Models
         [DataType(DataType.Date)]
         public DateTime? NextMaintenanceDue { get; set; }
 
-        // ADD THESE THREE PROPERTIES HERE:
         [Display(Name = "Last Maintenance Date")]
         [DataType(DataType.Date)]
         public DateTime? LastMaintenanceDate { get; set; }
