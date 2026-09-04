@@ -1,0 +1,131 @@
+@model IEnumerable<AssetFlow.Models.AssetRequest>
+
+@{
+    ViewData["Title"] = "My Requests";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">My Requests</h1>
+        <p class="text-muted mb-0">@Model.Count() request(s) on record</p>
+    </div>
+    <a asp-action="Browse" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>New Request
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-1"></i>@TempData["SuccessMessage"]
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-circle me-1"></i>@TempData["ErrorMessage"]
+    </div>
+}
+
+<div class="card mb-3">
+    <div class="card-body py-2">
+        <div class="d-flex gap-2 align-items-center">
+            <small class="text-muted me-2">Show:</small>
+            <a asp-action="Index" class="btn btn-sm @(string.IsNullOrEmpty(ViewBag.SelectedStatus) ? "btn-primary" : "btn-outline-secondary")">All</a>
+            <a asp-action="Index" asp-route-status="Pending" class="btn btn-sm @(ViewBag.SelectedStatus == "Pending" ? "btn-primary" : "btn-outline-secondary")">Pending</a>
+            <a asp-action="Index" asp-route-status="Approved" class="btn btn-sm @(ViewBag.SelectedStatus == "Approved" ? "btn-primary" : "btn-outline-secondary")">Approved</a>
+            <a asp-action="Index" asp-route-status="Rejected" class="btn btn-sm @(ViewBag.SelectedStatus == "Rejected" ? "btn-primary" : "btn-outline-secondary")">Rejected</a>
+        </div>
+    </div>
+</div>
+
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 28%">Equipment</th>
+                            <th>Dates</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Response</th>
+                            <th class="text-end" style="width: 110px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-medium">@(request.Asset?.Name ?? "Removed asset")</div>
+                                    <small class="text-muted">@request.Asset?.SerialNumber</small>
+                                </td>
+                                <td>
+                                    <small>
+                                        @request.NeededFrom.ToString("dd MMM") - @request.NeededUntil.ToString("dd MMM yyyy")
+                                        <span class="text-muted d-block">@request.DaysRequested day(s)</span>
+                                    </small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@request.RequestedOn.ToString("dd MMM yyyy")</small>
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = request.Status switch
+                                        {
+                                            "Approved" => "badge bg-success",
+                                            "Pending" => "badge bg-warning",
+                                            "Rejected" => "badge bg-danger",
+                                            _ => "badge bg-secondary"
+                                        };
+                                    }
+                                    <span class="@statusClass">@request.Status</span>
+                                </td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(request.ReviewNotes))
+                                    {
+                                        <small>@request.ReviewNotes</small>
+                                    }
+                                    else if (request.Status == "Pending")
+                                    {
+                                        <small class="text-muted">Waiting on IT</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">No notes</small>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (request.CanBeCancelled)
+                                    {
+                                        <form asp-action="Cancel" asp-route-id="@request.Id" method="post"
+                                              onsubmit="return confirm('Cancel this request?');">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-times me-1"></i>Cancel
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-paper-plane fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No requests yet</h4>
+        <p class="text-muted">Browse the available equipment and put in your first request.</p>
+        <a asp-action="Browse" class="btn btn-primary">
+            <i class="fas fa-search me-1"></i>Browse Equipment
+        </a>
+    </div>
+}

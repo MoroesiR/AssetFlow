@@ -43,6 +43,16 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - Checkout history with date ranges
 - Maintenance schedule showing overdue items
 
+**Roles and the Request Workflow**
+- Two roles: Admin (IT department) and Employee
+- Employees sign up with their name and department, and land on their own portal
+- Employees browse what is available, submit a request with dates and a reason, and can cancel while it is still pending
+- Admin gets a request queue with a live count in the navigation, oldest first
+- Approving a request checks the asset out to the requester in one step
+- Rejections need a reason, and the requester sees it on their request list
+- Employees can see exactly what is signed out to them and when it is due back
+- Inventory, reports, maintenance and the dashboard are admin-only
+
 **API Access**
 - RESTful endpoints for all major operations
 - Swagger/OpenAPI documentation for testing
@@ -72,7 +82,7 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 
 ## Tech Stack
 
-- **Backend:** ASP.NET Core 8.0, C#
+- **Backend:** ASP.NET Core 10.0, C#
 - **Database:** SQL Server (SQLite for dev/testing)
 - **ORM:** Entity Framework Core
 - **Auth:** ASP.NET Core Identity
@@ -83,7 +93,7 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 ## Getting Started
 
 ### Prerequisites
-- .NET 8.0 SDK
+- .NET 10.0 SDK
 - SQL Server (or use SQLite for quick testing)
 - Visual Studio 2022 or VS Code
 
@@ -109,37 +119,36 @@ Or just hit F5 in Visual Studio
 4. Open your browser to `https://localhost:5001`
 
 ### Demo Login
+The admin account is created on first run from the `AdminUser` section in
+`appsettings.json`. For anything beyond local testing move those values into
+user secrets or environment variables.
+
 - **Email:** admin@gmail.com
 - **Password:** Admin@123
+
+For the employee side, register a new account through the Register link. Anyone
+who signs up gets the Employee role - admin rights are only handed out from the
+seeder or by hand.
 
 
 ## Current Limitations & Known Issues
 
-Right now, this is an admin-only system. The admin does everything - check-in, check-out, maintenance scheduling. 
+The admin still does all the physical work - handing equipment over, checking it
+back in, scheduling maintenance. Employees can now ask for equipment themselves
+instead of walking to the IT office, but nothing is self-service beyond that.
 
 **Known limitations:**
-- No role-based access control yet (working on this - see Future Features)
-- No email notifications for overdue items
+- No email notifications, so a request only gets noticed when the admin opens the queue
+- Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
 - Can't reserve equipment in advance
 - Maintenance schedule doesn't auto-generate recurring tasks
 - No bulk import for adding multiple assets at once
+- The API endpoints are still open - authentication on them is on the list
 
 ## Future Features
 
-I'm planning to add these next:
-
-### Phase 1: Multi-Role System (In Progress)
-- **Regular Users** (employees from different departments)
-  - Browse available assets
-  - Submit checkout requests
-  - View their current checkouts
-  - See request status (pending/approved/rejected)
-  
-- **Admin/IT Department**
-  - Receive and approve/reject requests
-  - Get notifications when requests come in
-  - Assign assets and track who has what
-  - All current admin capabilities
+Phase 1 (the multi-role request system) is done and described under Current
+Features. These are next:
 
 ### Phase 2: Enhanced Features
 - Email notifications (overdue items, approved requests, maintenance reminders)
@@ -165,6 +174,8 @@ I'm planning to add these next:
 - State management for the asset lifecycle (Available → Checked Out → Maintenance → Available) needed more thought than I expected
 - Swagger is amazing for API testing - wish I'd set it up earlier
 - Bootstrap is great until you need something custom, then you're writing CSS anyway
+- Swapping IdentityUser for my own ApplicationUser halfway through the project meant touching the context, the seeder and every page that injected the old type. Next time I'll extend the user on day one
+- Hiding a nav link is not security. The role checks had to go on the controllers, and I only trusted them once I'd tried typing the admin URLs in as an employee
 
 **Design decisions:**
 - Started with too many features in mind, had to scale back to get something working first
@@ -178,15 +189,19 @@ I'm planning to add these next:
 - Getting the maintenance "days overdue" calculation to work properly
 - Chart.js integration took longer than expected (JavaScript + Razor Pages = confusion at first)
 - Deployment readiness - had to refactor connection strings and configurations
+- Two people can request the same laptop, and the admin can also check it out by hand while a request sits in the queue. Availability now gets re-checked at the moment of approval instead of when the request was made
+- Stopping the same request landing twice - a double click on submit was enough to do it before I added the pending-request check
 
 ## Project Structure
 
 ```
 AssetFlow/
+├── Areas/Identity/      # Login and registration pages
 ├── Controllers/         # MVC controllers and API endpoints
 ├── Models/             # Entity models and ViewModels
 ├── Views/              # Razor views for UI
-├── Data/               # Database context and migrations
+├── ViewComponents/     # Small reusable pieces (the pending request badge)
+├── Data/               # Database context, seeding and migrations
 ├── wwwroot/            # Static files (CSS, JS, images)
 └── appsettings.json    # Configuration
 ```
@@ -200,11 +215,11 @@ Beyond just being a portfolio piece, I built this to demonstrate that I can:
 - Write clean, maintainable code
 - Think about user experience, not just functionality
 
-This system could legitimately be used by a small-to-medium business IT department today. The multi-role feature I'm adding will make it even more practical.
+This system could legitimately be used by a small-to-medium business IT department today. Now that employees can request equipment themselves it is a lot closer to how an IT department actually works.
 
 ## Live Demo
 
-[Coming soon - will deploy once the request system is complete]
+[Coming soon]
 
 ## Contact
 
@@ -221,4 +236,4 @@ This project is open source and available under the MIT License.
 ---
 
 *Built with C# and way too much coffee ☕*
-*Current Version: 2.1.4*
+*Current Version: 2.2.0*

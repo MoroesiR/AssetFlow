@@ -1,0 +1,6 @@
+@model int
+
+@if (Model > 0)
+{
+    <span class="badge bg-danger ms-1" title="@Model request(s) waiting for review">@Model</span>
+}

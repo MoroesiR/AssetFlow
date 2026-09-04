@@ -1,0 +1,104 @@
+@model IEnumerable<AssetFlow.Models.Asset>
+
+@{
+    ViewData["Title"] = "My Equipment";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">My Equipment</h1>
+        <p class="text-muted mb-0">@Model.Count() item(s) currently signed out to you</p>
+    </div>
+    <a asp-action="Browse" class="btn btn-outline-primary">
+        <i class="fas fa-search me-1"></i>Browse Equipment
+    </a>
+</div>
+
+@if (Model.Any(a => a.IsOverdue))
+{
+    <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle me-1"></i>
+        <strong>You have overdue equipment.</strong>
+        Please return it to the IT department, or ask them to extend the return date.
+    </div>
+}
+
+@if (Model.Any())
+{
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%">Equipment</th>
+                            <th>Serial</th>
+                            <th>Collected</th>
+                            <th>Return By</th>
+                            <th>Reason on File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var asset in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            @if (asset.Category == "IT Equipment")
+                                            {
+                                                <i class="fas fa-laptop text-primary"></i>
+                                            }
+                                            else if (asset.Category == "AV Equipment")
+                                            {
+                                                <i class="fas fa-tv text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-box text-secondary"></i>
+                                            }
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">@asset.Name</div>
+                                            <small class="text-muted">@asset.Category</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><code class="text-muted">@asset.SerialNumber</code></td>
+                                <td><small>@asset.CheckoutDate?.ToString("dd MMM yyyy")</small></td>
+                                <td>
+                                    @if (asset.IsOverdue)
+                                    {
+                                        var daysLate = (DateTime.Today - asset.ExpectedReturnDate.Value.Date).Days;
+                                        <span class="badge bg-danger">@daysLate day(s) overdue</span>
+                                    }
+                                    else
+                                    {
+                                        <small>@asset.ExpectedReturnDate?.ToString("dd MMM yyyy")</small>
+                                    }
+                                </td>
+                                <td><small class="text-muted">@asset.CheckoutNotes</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 text-muted small">
+        <i class="fas fa-info-circle me-1"></i>
+        Returns go through the IT department - they record the condition when you hand an item back.
+    </div>
+}
+else
+{
+    <div class="text-center py-5">
+        <i class="fas fa-laptop fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">Nothing signed out to you</h4>
+        <p class="text-muted">Equipment shows up here once IT approves a request and hands it over.</p>
+        <a asp-action="Browse" class="btn btn-primary">
+            <i class="fas fa-search me-1"></i>Browse Equipment
+        </a>
+    </div>
+}

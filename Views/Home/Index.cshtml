@@ -22,6 +22,10 @@
                         {
                             <span class="badge bg-danger ms-2">@Model.OverdueAssets Overdue</span>
                         }
+                        @if (Model.PendingRequests > 0)
+                        {
+                            <span class="badge bg-danger ms-2">@Model.PendingRequests Requests Waiting</span>
+                        }
                     </p>
                 </div>
             </div>
@@ -63,13 +67,28 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card border-info">
+                <div class="card @(Model.PendingRequests > 0 ? "border-danger" : "border-info")">
                     <div class="card-body">
-                        <h5 class="card-title text-info">
-                            <i class="fas fa-chart-bar me-2"></i>Dashboard
+                        <h5 class="card-title @(Model.PendingRequests > 0 ? "text-danger" : "text-info")">
+                            <i class="fas fa-inbox me-2"></i>Requests
                         </h5>
-                        <p class="card-text">View detailed analytics & reports</p>
-                        <a asp-controller="Dashboard" asp-action="Index" class="btn btn-info btn-sm">Go to Dashboard</a>
+                        <p class="card-text">
+                            @if (Model.PendingRequests > 0)
+                            {
+                                @Model.PendingRequests<text> employee request(s) to review</text>
+                                @if (Model.OldestPendingRequest.HasValue)
+                                {
+                                    var waiting = (DateTime.Today - Model.OldestPendingRequest.Value.Date).Days;
+                                    <span class="d-block small text-muted">Oldest has been waiting @waiting day(s)</span>
+                                }
+                            }
+                            else
+                            {
+                                <text>Nothing waiting for review</text>
+                            }
+                        </p>
+                        <a asp-controller="RequestQueue" asp-action="Index"
+                           class="btn btn-sm @(Model.PendingRequests > 0 ? "btn-danger" : "btn-info")">Open Queue</a>
                     </div>
                 </div>
             </div>
@@ -199,6 +218,13 @@
                             <a asp-controller="Assets" asp-action="Index" class="btn btn-outline-secondary btn-sm text-start">
                                 <i class="fas fa-list me-2"></i>View All Assets
                             </a>
+                            <a asp-controller="RequestQueue" asp-action="Index" class="btn btn-outline-secondary btn-sm text-start">
+                                <i class="fas fa-inbox me-2"></i>Review Requests
+                                @if (Model.PendingRequests > 0)
+                                {
+                                    <span class="badge bg-danger ms-1">@Model.PendingRequests</span>
+                                }
+                            </a>
                             <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary btn-sm text-start">
                                 <i class="fas fa-chart-bar me-2"></i>View Analytics
                             </a>
@@ -257,7 +283,7 @@ else
                 <div class="text-center mt-4">
                     <p class="text-muted small">
                         <i class="fas fa-shield-alt me-1"></i>
-                        Secure connection • Company Internal Use Only • v2.1.4
+                        Secure connection • Company Internal Use Only • v2.2.0
                     </p>
                 </div>
             </div>

@@ -1,0 +1,195 @@
+@model AssetFlow.Controllers.EmployeeHomeViewModel
+
+@{
+    ViewData["Title"] = "AssetFlow - My Equipment Portal";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header bg-light p-4 rounded">
+                <h1 class="h3 mb-2">Welcome, @Model.FullName</h1>
+                <p class="text-muted mb-0">
+                    @Model.Department • @DateTime.Now.ToString("dddd, MMMM dd, yyyy") •
+                    <span class="badge bg-success">@Model.AvailableAssets Available to Request</span>
+                    @if (Model.PendingRequests > 0)
+                    {
+                        <span class="badge bg-warning ms-2">@Model.PendingRequests Awaiting Approval</span>
+                    }
+                    @if (Model.MyEquipment.Any())
+                    {
+                        <span class="badge bg-primary ms-2">@Model.MyEquipment.Count With You</span>
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="fas fa-search me-2"></i>Browse Equipment
+                    </h5>
+                    <p class="card-text">@Model.AvailableAssets item(s) available right now</p>
+                    <a asp-controller="Requests" asp-action="Browse" class="btn btn-primary btn-sm">Find Equipment</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">
+                        <i class="fas fa-paper-plane me-2"></i>My Requests
+                    </h5>
+                    <p class="card-text">@Model.PendingRequests pending, @Model.ApprovedRequests approved</p>
+                    <a asp-controller="Requests" asp-action="Index" class="btn btn-warning btn-sm">View Requests</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-success">
+                        <i class="fas fa-laptop me-2"></i>My Equipment
+                    </h5>
+                    <p class="card-text">@Model.MyEquipment.Count item(s) signed out to you</p>
+                    <a asp-controller="Requests" asp-action="MyEquipment" class="btn btn-success btn-sm">What I Have</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>My Recent Requests</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.MyRequests.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var request in Model.MyRequests)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">@(request.Asset?.Name ?? "Removed asset")</h6>
+                                            <small class="text-muted">
+                                                @request.NeededFrom.ToString("dd MMM") - @request.NeededUntil.ToString("dd MMM yyyy")
+                                            </small>
+                                            @if (!string.IsNullOrEmpty(request.ReviewNotes))
+                                            {
+                                                <div class="small text-muted mt-1">
+                                                    <i class="fas fa-comment me-1"></i>@request.ReviewNotes
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted d-block">@request.RequestedOn.ToString("dd MMM")</small>
+                                            @{
+                                                var statusClass = request.Status switch
+                                                {
+                                                    "Approved" => "badge bg-success",
+                                                    "Pending" => "badge bg-warning",
+                                                    "Rejected" => "badge bg-danger",
+                                                    _ => "badge bg-secondary"
+                                                };
+                                            }
+                                            <span class="@statusClass">@request.Status</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-paper-plane fa-2x mb-2"></i>
+                            <p>You have not requested anything yet</p>
+                            <a asp-controller="Requests" asp-action="Browse" class="btn btn-primary btn-sm">Browse Equipment</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-laptop me-2"></i>Currently With Me</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.MyEquipment.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var asset in Model.MyEquipment)
+                            {
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="fw-medium">@asset.Name</div>
+                                            <small class="text-muted">@asset.SerialNumber</small>
+                                        </div>
+                                        <div class="text-end">
+                                            @if (asset.IsOverdue)
+                                            {
+                                                var daysLate = (DateTime.Today - asset.ExpectedReturnDate.Value.Date).Days;
+                                                <span class="badge bg-danger">@daysLate day(s) overdue</span>
+                                            }
+                                            else
+                                            {
+                                                <small class="text-muted">Due @asset.ExpectedReturnDate?.ToString("dd MMM")</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <p class="mb-0">Nothing signed out to you</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body small text-muted">
+                    <h6 class="card-title text-dark">Need something urgently?</h6>
+                    <p class="mb-0">
+                        Requests are reviewed by the IT department during office hours.
+                        For anything urgent call the IT Help Desk on ext. 4357.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-header {
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+    }
+
+    .list-group-item {
+        border-left: 0;
+        border-right: 0;
+        padding: 0.75rem 0;
+    }
+
+        .list-group-item:first-child {
+            border-top: 0;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: 0;
+        }
+</style>
