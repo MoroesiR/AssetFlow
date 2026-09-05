@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
+using AssetFlow.Services;
 
 namespace AssetFlow.Controllers
 {
@@ -16,10 +17,12 @@ namespace AssetFlow.Controllers
     public class RequestQueueController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly NotificationService _notifications;
 
-        public RequestQueueController(ApplicationDbContext context)
+        public RequestQueueController(ApplicationDbContext context, NotificationService notifications)
         {
             _context = context;
+            _notifications = notifications;
         }
 
         // GET: RequestQueue
@@ -154,6 +157,8 @@ namespace AssetFlow.Controllers
 
                 await _context.SaveChangesAsync();
 
+                await _notifications.NotifyRequesterApprovedAsync(request, asset.Name, expectedReturnDate);
+
                 TempData["SuccessMessage"] = $"Approved. '{asset.Name}' is now checked out to {request.RequesterName}.";
                 return RedirectToAction(nameof(Index));
             }
@@ -197,6 +202,8 @@ namespace AssetFlow.Controllers
             request.ReviewNotes = reviewNotes;
 
             await _context.SaveChangesAsync();
+
+            await _notifications.NotifyRequesterRejectedAsync(request, request.Asset?.Name ?? "the equipment", reviewNotes);
 
             TempData["SuccessMessage"] = $"Request from {request.RequesterName} rejected.";
             return RedirectToAction(nameof(Index));

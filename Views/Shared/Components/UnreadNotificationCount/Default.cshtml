@@ -1,0 +1,6 @@
+@model int
+
+@if (Model > 0)
+{
+    <span class="badge rounded-pill bg-danger ms-1" title="@Model unread notification(s)">@(Model > 9 ? "9+" : Model.ToString())</span>
+}

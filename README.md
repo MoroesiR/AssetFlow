@@ -53,6 +53,14 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - Employees can see exactly what is signed out to them and when it is due back
 - Inventory, reports, maintenance and the dashboard are admin-only
 
+**Notifications**
+- A bell in the navigation with an unread count, for both roles
+- Admin is told when a request comes in and when one is withdrawn
+- The requester is told when their request is approved or declined, with the reason
+- Overdue equipment and items due for servicing are raised automatically
+- Clicking a notification marks it read and takes you to the thing it is about
+- Mark all read, and clear the ones you have read - unread items are never dropped
+
 **API Access**
 - RESTful endpoints for all major operations
 - Swagger/OpenAPI documentation for testing
@@ -138,7 +146,8 @@ back in, scheduling maintenance. Employees can now ask for equipment themselves
 instead of walking to the IT office, but nothing is self-service beyond that.
 
 **Known limitations:**
-- No email notifications, so a request only gets noticed when the admin opens the queue
+- Notifications are in-app only. There is no mail or SMS gateway behind this, so nothing reaches you when you are signed out
+- The overdue and maintenance sweep runs when somebody opens the bell, not on a timer, so a notice appears on first visit rather than overnight
 - Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
 - Can't reserve equipment in advance
 - Maintenance schedule doesn't auto-generate recurring tasks
@@ -151,7 +160,7 @@ Phase 1 (the multi-role request system) is done and described under Current
 Features. These are next:
 
 ### Phase 2: Enhanced Features
-- Email notifications (overdue items, approved requests, maintenance reminders)
+- Email or SMS delivery for the notifications that already exist in-app
 - Equipment reservation system (book for future dates)
 - Recurring maintenance schedules
 - Bulk asset import via CSV

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
+using AssetFlow.Services;
 
 namespace AssetFlow.Controllers
 {
@@ -17,11 +18,16 @@ namespace AssetFlow.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly NotificationService _notifications;
 
-        public RequestsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public RequestsController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            NotificationService notifications)
         {
             _context = context;
             _userManager = userManager;
+            _notifications = notifications;
         }
 
         // GET: Requests
@@ -196,6 +202,9 @@ namespace AssetFlow.Controllers
             _context.AssetRequests.Add(request);
             await _context.SaveChangesAsync();
 
+            // Saved first so the notification can carry the request id in its link.
+            await _notifications.NotifyAdminsOfNewRequestAsync(request, asset.Name);
+
             TempData["SuccessMessage"] = $"Request submitted for '{asset.Name}'. IT will review it shortly.";
             return RedirectToAction(nameof(Index));
         }
@@ -228,6 +237,8 @@ namespace AssetFlow.Controllers
             request.ReviewNotes = "Cancelled by requester";
 
             await _context.SaveChangesAsync();
+
+            await _notifications.NotifyAdminsOfCancellationAsync(request, request.Asset?.Name ?? "an asset");
 
             TempData["SuccessMessage"] = $"Request for '{request.Asset?.Name}' cancelled.";
             return RedirectToAction(nameof(Index));

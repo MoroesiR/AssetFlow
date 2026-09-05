@@ -10,6 +10,12 @@
         var displayName = string.IsNullOrWhiteSpace(currentUser?.FullName) ? User.Identity?.Name : currentUser.FullName;
 
         <li class="nav-item">
+            <a class="nav-link text-dark" asp-controller="Notifications" asp-action="Index" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <vc:unread-notification-count></vc:unread-notification-count>
+            </a>
+        </li>
+        <li class="nav-item">
             <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
                 Hello @displayName!
                 @if (User.IsInRole("Admin"))
