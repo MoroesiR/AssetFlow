@@ -61,6 +61,20 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - Clicking a notification marks it read and takes you to the thing it is about
 - Mark all read, and clear the ones you have read - unread items are never dropped
 
+**Bulk Import**
+- Add many assets at once from a CSV, with a downloadable template
+- Tick "check the file without importing" to validate first - nothing is written
+- A bad row is skipped with a reason and a line number, the rest still import
+- Duplicate serials are caught against the database and within the file itself
+- Prices are read in either convention, so R 4 250,00 and 4,250.00 both mean the same thing
+
+**Search and Filtering**
+- Search across name, serial, location, vendor and whoever is holding the item
+- Filter by status, category, vendor, holding department and a price range
+- Saved views for overdue, maintenance due, expired warranty and missing location
+- Sort by name, price or purchase date
+- Category and vendor dropdowns are built from the data, not hardcoded
+
 **API Access**
 - RESTful endpoints for all major operations
 - Swagger/OpenAPI documentation for testing
@@ -151,7 +165,6 @@ instead of walking to the IT office, but nothing is self-service beyond that.
 - Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
 - Can't reserve equipment in advance
 - Maintenance schedule doesn't auto-generate recurring tasks
-- No bulk import for adding multiple assets at once
 - The API endpoints are still open - authentication on them is on the list
 
 ## Future Features
@@ -163,8 +176,6 @@ Features. These are next:
 - Email or SMS delivery for the notifications that already exist in-app
 - Equipment reservation system (book for future dates)
 - Recurring maintenance schedules
-- Bulk asset import via CSV
-- Advanced search and filtering
 - Mobile-responsive improvements
 
 ### Phase 3: Advanced Analytics

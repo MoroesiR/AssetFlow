@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
+using AssetFlow.Services;
 
 namespace AssetFlow.Controllers
 {
@@ -15,44 +17,205 @@ namespace AssetFlow.Controllers
     public class AssetsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AssetImportService _import;
 
-        public AssetsController(ApplicationDbContext context)
+        public AssetsController(ApplicationDbContext context, AssetImportService import)
         {
             _context = context;
+            _import = import;
         }
 
         // GET: Assets
-        public async Task<IActionResult> Index(string search, string status, string category)
+        public async Task<IActionResult> Index(
+            string search,
+            string status,
+            string category,
+            string vendor,
+            string department,
+            decimal? minPrice,
+            decimal? maxPrice,
+            string flag,
+            string sort)
         {
             var assets = _context.Assets.AsQueryable();
 
-            
             if (!string.IsNullOrEmpty(search))
             {
+                // Vendor and the holder's name are in here because "who has the Dell"
+                // and "what did we buy from Incredible Connection" are both things the
+                // IT desk actually asks the search box.
                 assets = assets.Where(a =>
                     a.Name.Contains(search) ||
                     a.SerialNumber.Contains(search) ||
-                    a.Location.Contains(search));
+                    (a.Location != null && a.Location.Contains(search)) ||
+                    (a.Vendor != null && a.Vendor.Contains(search)) ||
+                    (a.CheckedOutToEmployee != null && a.CheckedOutToEmployee.Contains(search)));
             }
 
-            
             if (!string.IsNullOrEmpty(status) && status != "All Status")
             {
                 assets = assets.Where(a => a.Status == status);
             }
 
-            
             if (!string.IsNullOrEmpty(category) && category != "All Categories")
             {
                 assets = assets.Where(a => a.Category == category);
             }
 
-            
+            if (!string.IsNullOrEmpty(vendor))
+            {
+                assets = assets.Where(a => a.Vendor == vendor);
+            }
+
+            if (!string.IsNullOrEmpty(department))
+            {
+                assets = assets.Where(a => a.EmployeeDepartment == department);
+            }
+
+            if (minPrice.HasValue)
+            {
+                assets = assets.Where(a => a.PurchasePrice >= minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                assets = assets.Where(a => a.PurchasePrice <= maxPrice.Value);
+            }
+
+            // The saved views. IsOverdue and IsMaintenanceDue are NotMapped, so the same
+            // rules are repeated here as query expressions - the model properties cannot
+            // cross into SQL.
+            var today = DateTime.Today;
+
+            switch (flag)
+            {
+                case "Overdue":
+                    assets = assets.Where(a => a.Status == "CheckedOut"
+                                               && a.ExpectedReturnDate != null
+                                               && a.ExpectedReturnDate < today);
+                    break;
+
+                case "MaintenanceDue":
+                    assets = assets.Where(a => a.RequiresMaintenance
+                                               || (a.NextMaintenanceDue != null && a.NextMaintenanceDue < today));
+                    break;
+
+                case "WarrantyExpired":
+                    assets = assets.Where(a => a.WarrantyExpiry != null && a.WarrantyExpiry < today);
+                    break;
+
+                case "NoLocation":
+                    assets = assets.Where(a => a.Location == null || a.Location == "");
+                    break;
+            }
+
+            assets = sort switch
+            {
+                "name_desc" => assets.OrderByDescending(a => a.Name),
+                "price" => assets.OrderBy(a => a.PurchasePrice),
+                "price_desc" => assets.OrderByDescending(a => a.PurchasePrice),
+                "purchased" => assets.OrderBy(a => a.PurchaseDate),
+                "purchased_desc" => assets.OrderByDescending(a => a.PurchaseDate),
+                "status" => assets.OrderBy(a => a.Status).ThenBy(a => a.Name),
+                _ => assets.OrderBy(a => a.Name)
+            };
+
+            // The dropdowns were hardcoded, which meant an asset in a category nobody had
+            // thought of was unreachable from the filters. They come off the data now.
+            ViewBag.Categories = await _context.Assets
+                .Select(a => a.Category)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            ViewBag.Vendors = await _context.Assets
+                .Where(a => a.Vendor != null && a.Vendor != "")
+                .Select(a => a.Vendor!)
+                .Distinct()
+                .OrderBy(v => v)
+                .ToListAsync();
+
+            ViewBag.Departments = await _context.Assets
+                .Where(a => a.EmployeeDepartment != null && a.EmployeeDepartment != "")
+                .Select(a => a.EmployeeDepartment!)
+                .Distinct()
+                .OrderBy(d => d)
+                .ToListAsync();
+
             ViewBag.SearchTerm = search;
             ViewBag.SelectedStatus = status;
             ViewBag.SelectedCategory = category;
+            ViewBag.SelectedVendor = vendor;
+            ViewBag.SelectedDepartment = department;
+            ViewBag.MinPrice = minPrice;
+            ViewBag.MaxPrice = maxPrice;
+            ViewBag.SelectedFlag = flag;
+            ViewBag.SelectedSort = sort;
+            ViewBag.TotalAssets = await _context.Assets.CountAsync();
 
             return View(await assets.ToListAsync());
+        }
+
+        // GET: Import
+        public IActionResult Import()
+        {
+            ViewBag.Columns = AssetImportService.Columns;
+            return View(new AssetImportResult());
+        }
+
+        // POST: Import
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(5 * 1024 * 1024)]
+        public async Task<IActionResult> Import(IFormFile? file, bool dryRun)
+        {
+            ViewBag.Columns = AssetImportService.Columns;
+
+            var result = new AssetImportResult { WasDryRun = dryRun };
+
+            if (file == null || file.Length == 0)
+            {
+                result.FileErrors.Add("Choose a CSV file to upload.");
+                return View(result);
+            }
+
+            // Five megabytes of CSV is somewhere north of fifty thousand assets. Anything
+            // larger is a mistake, and reading it into a string would be the wrong shape.
+            if (file.Length > 5 * 1024 * 1024)
+            {
+                result.FileErrors.Add("That file is larger than 5 MB.");
+                return View(result);
+            }
+
+            if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+            {
+                result.FileErrors.Add("The importer only reads .csv files. Save the spreadsheet as CSV first.");
+                return View(result);
+            }
+
+            string csv;
+
+            using (var reader = new StreamReader(file.OpenReadStream()))
+            {
+                csv = await reader.ReadToEndAsync();
+            }
+
+            result = await _import.ImportAsync(csv, file.FileName, dryRun);
+
+            if (!dryRun && result.ValidCount > 0)
+            {
+                TempData["SuccessMessage"] = $"Imported {result.ValidCount} asset(s) from {file.FileName}.";
+            }
+
+            return View(result);
+        }
+
+        // GET: ImportTemplate - the blank file people fill in.
+        public IActionResult ImportTemplate()
+        {
+            return File(Encoding.UTF8.GetBytes(AssetImportService.TemplateCsv()),
+                "text/csv",
+                "assetflow-import-template.csv");
         }
 
         // GET: Details

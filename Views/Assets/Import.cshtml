@@ -1,0 +1,233 @@
+@model AssetFlow.Models.AssetImportResult
+
+@{
+    ViewData["Title"] = "Import Assets";
+    var columns = (string[])ViewBag.Columns;
+    var hasRun = Model.Rows.Count > 0 || Model.FileErrors.Count > 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Import Assets</h1>
+        <p class="text-muted mb-0">Add many assets at once from a spreadsheet</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Inventory
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        <i class="fas fa-check-circle me-1"></i>@TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card mb-3">
+            <div class="card-header">
+                <strong>Upload a file</strong>
+            </div>
+            <div class="card-body">
+                <form asp-action="Import" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label">CSV file</label>
+                        <input type="file" name="file" accept=".csv" class="form-control" required>
+                        <div class="form-text">Up to 5 MB. Save from Excel as "CSV (Comma delimited)".</div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="dryRun" value="true" id="dryRun" checked>
+                        <label class="form-check-label" for="dryRun">
+                            Check the file without importing
+                        </label>
+                        <div class="form-text">
+                            Leave this ticked to see what would happen first. Nothing is written.
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-file-import me-1"></i>Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <strong>What the file needs</strong>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">
+                    The first row has to be a header. <strong>Name</strong> and
+                    <strong>SerialNumber</strong> are required, the rest are optional and
+                    can be left out entirely. Column order does not matter.
+                </p>
+                <ul class="small mb-3">
+                    @foreach (var column in columns)
+                    {
+                        <li>
+                            <code>@column</code>
+                            @if (column == "Name" || column == "SerialNumber")
+                            {
+                                <span class="badge bg-secondary ms-1">required</span>
+                            }
+                        </li>
+                    }
+                </ul>
+                <p class="small text-muted mb-3">
+                    Dates are read as <code>yyyy-MM-dd</code> first, then the usual
+                    day-first formats. Prices may carry an R and thousands separators.
+                </p>
+                <a asp-action="ImportTemplate" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-download me-1"></i>Download template
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        @if (!hasRun)
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-file-csv fa-2x text-muted mb-3"></i>
+                    <h5>No file checked yet</h5>
+                    <p class="text-muted mb-0">Upload a CSV on the left and the result appears here.</p>
+                </div>
+            </div>
+        }
+        else if (Model.FileErrors.Count > 0)
+        {
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <strong>The file could not be read</strong>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        @foreach (var error in Model.FileErrors)
+                        {
+                            <li>@error</li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                @if (Model.WasDryRun)
+                                {
+                                    <span>Checked @Model.FileName</span>
+                                }
+                                else
+                                {
+                                    <span>Imported from @Model.FileName</span>
+                                }
+                            </h5>
+                            <p class="text-muted mb-0 small">
+                                @Model.ValidCount row(s) good, @Model.InvalidCount skipped
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success fs-6">@Model.ValidCount</span>
+                            @if (Model.InvalidCount > 0)
+                            {
+                                <span class="badge bg-danger fs-6">@Model.InvalidCount</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.WasDryRun && Model.HasAnythingToImport)
+                    {
+                        <div class="alert alert-info mt-3 mb-0 small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Nothing was written. Untick "check the file without importing"
+                            and upload it again to bring these @Model.ValidCount asset(s) in.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            @if (Model.InvalidCount > 0)
+            {
+                <div class="card mb-3 border-warning">
+                    <div class="card-header">
+                        <strong>Skipped rows</strong>
+                        <span class="text-muted small ms-1">line numbers match the file</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 70px;">Line</th>
+                                    <th>Row</th>
+                                    <th>Why it was skipped</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Rows.Where(r => !r.IsValid))
+                                {
+                                    <tr>
+                                        <td class="text-muted">@row.LineNumber</td>
+                                        <td>
+                                            <div>@(string.IsNullOrWhiteSpace(row.Name) ? "(no name)" : row.Name)</div>
+                                            <small class="text-muted">@row.SerialNumber</small>
+                                        </td>
+                                        <td>
+                                            @foreach (var error in row.Errors)
+                                            {
+                                                <div class="small text-danger">@error</div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+
+            @if (Model.ValidCount > 0)
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <strong>@(Model.WasDryRun ? "Would be imported" : "Imported")</strong>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th style="width: 70px;">Line</th>
+                                    <th>Name</th>
+                                    <th>Serial</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Rows.Where(r => r.IsValid))
+                                {
+                                    <tr>
+                                        <td class="text-muted">@row.LineNumber</td>
+                                        <td>@row.Asset?.Name</td>
+                                        <td><small>@row.Asset?.SerialNumber</small></td>
+                                        <td><small>@row.Asset?.Category</small></td>
+                                        <td class="text-end">@row.Asset?.PurchasePrice.ToString("N2")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>

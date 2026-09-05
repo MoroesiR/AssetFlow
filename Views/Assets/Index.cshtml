@@ -7,11 +7,16 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-0">Assets Inventory</h1>
-        <p class="text-muted mb-0">Total: @Model.Count() assets registered</p>
+        <p class="text-muted mb-0">
+            Showing @Model.Count() of @ViewBag.TotalAssets assets registered
+        </p>
     </div>
     <div>
         <a asp-action="Create" class="btn btn-primary">
             <i class="fas fa-plus me-1"></i>Add Asset
+        </a>
+        <a asp-action="Import" class="btn btn-outline-primary">
+            <i class="fas fa-file-import me-1"></i>Import CSV
         </a>
         <button class="btn btn-outline-secondary" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Print
@@ -20,39 +25,115 @@
 </div>
 
 
+@{
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    var vendors = ViewBag.Vendors as List<string> ?? new List<string>();
+    var departments = ViewBag.Departments as List<string> ?? new List<string>();
+    var flag = ViewBag.SelectedFlag as string;
+
+    var anyFilter = !string.IsNullOrEmpty(ViewBag.SearchTerm as string)
+        || !string.IsNullOrEmpty(ViewBag.SelectedStatus as string)
+        || !string.IsNullOrEmpty(ViewBag.SelectedCategory as string)
+        || !string.IsNullOrEmpty(ViewBag.SelectedVendor as string)
+        || !string.IsNullOrEmpty(ViewBag.SelectedDepartment as string)
+        || ViewBag.MinPrice != null
+        || ViewBag.MaxPrice != null
+        || !string.IsNullOrEmpty(flag);
+}
+
 <div class="card mb-3">
-    <div class="card-body py-2">
-        <form method="get" asp-action="Index" class="row g-2 align-items-center">
-            <div class="col-auto">
-                <small class="text-muted">Filter by:</small>
-            </div>
-            <div class="col-auto">
-                <select name="status" class="form-select form-select-sm" style="width: 150px;">
-                    <option value="">All Status</option>
-                    <option value="Available" selected="@(ViewBag.SelectedStatus == "Available")">Available</option>
-                    <option value="CheckedOut" selected="@(ViewBag.SelectedStatus == "CheckedOut")">Checked Out</option>
-                    <option value="Maintenance" selected="@(ViewBag.SelectedStatus == "Maintenance")">Maintenance</option>
-                </select>
-            </div>
-            <div class="col-auto">
-                <select name="category" class="form-select form-select-sm" style="width: 150px;">
-                    <option value="">All Categories</option>
-                    <option value="IT Equipment" selected="@(ViewBag.SelectedCategory == "IT Equipment")">IT Equipment</option>
-                    <option value="Furniture" selected="@(ViewBag.SelectedCategory == "Furniture")">Furniture</option>
-                    <option value="AV Equipment" selected="@(ViewBag.SelectedCategory == "AV Equipment")">AV Equipment</option>
-                </select>
-            </div>
-            <div class="col-auto ms-auto">
-                <div class="input-group input-group-sm" style="width: 250px;">
-                    <input type="text" name="search" class="form-control" placeholder="Search assets..."
+    <div class="card-body py-3">
+        <form method="get" asp-action="Index">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Search</label>
+                    <input type="text" name="search" class="form-control form-control-sm"
+                           placeholder="Name, serial, location, vendor, holder"
                            value="@ViewBag.SearchTerm">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        <i class="fas fa-search"></i>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        <option value="Available" selected="@(ViewBag.SelectedStatus == "Available")">Available</option>
+                        <option value="CheckedOut" selected="@(ViewBag.SelectedStatus == "CheckedOut")">Checked Out</option>
+                        <option value="Maintenance" selected="@(ViewBag.SelectedStatus == "Maintenance")">Maintenance</option>
+                        <option value="Retired" selected="@(ViewBag.SelectedStatus == "Retired")">Retired</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Category</label>
+                    <select name="category" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        @foreach (var item in categories)
+                        {
+                            <option value="@item" selected="@(ViewBag.SelectedCategory as string == item)">@item</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Vendor</label>
+                    <select name="vendor" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        @foreach (var item in vendors)
+                        {
+                            <option value="@item" selected="@(ViewBag.SelectedVendor as string == item)">@item</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Sort by</label>
+                    <select name="sort" class="form-select form-select-sm">
+                        <option value="">Name (A-Z)</option>
+                        <option value="name_desc" selected="@(ViewBag.SelectedSort == "name_desc")">Name (Z-A)</option>
+                        <option value="price_desc" selected="@(ViewBag.SelectedSort == "price_desc")">Price (high first)</option>
+                        <option value="price" selected="@(ViewBag.SelectedSort == "price")">Price (low first)</option>
+                        <option value="purchased_desc" selected="@(ViewBag.SelectedSort == "purchased_desc")">Newest purchase</option>
+                        <option value="purchased" selected="@(ViewBag.SelectedSort == "purchased")">Oldest purchase</option>
+                        <option value="status" selected="@(ViewBag.SelectedSort == "status")">Status</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2 align-items-end mt-1">
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Held by dept</label>
+                    <select name="department" class="form-select form-select-sm">
+                        <option value="">Any</option>
+                        @foreach (var item in departments)
+                        {
+                            <option value="@item" selected="@(ViewBag.SelectedDepartment as string == item)">@item</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Price from</label>
+                    <input type="number" step="0.01" min="0" name="minPrice" class="form-control form-control-sm"
+                           value="@ViewBag.MinPrice">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Price to</label>
+                    <input type="number" step="0.01" min="0" name="maxPrice" class="form-control form-control-sm"
+                           value="@ViewBag.MaxPrice">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Only show</label>
+                    <select name="flag" class="form-select form-select-sm">
+                        <option value="">Everything</option>
+                        <option value="Overdue" selected="@(flag == "Overdue")">Overdue</option>
+                        <option value="MaintenanceDue" selected="@(flag == "MaintenanceDue")">Maintenance due</option>
+                        <option value="WarrantyExpired" selected="@(flag == "WarrantyExpired")">Warranty expired</option>
+                        <option value="NoLocation" selected="@(flag == "NoLocation")">No location set</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end">
+                    <button class="btn btn-primary btn-sm" type="submit">
+                        <i class="fas fa-search me-1"></i>Apply
                     </button>
-                    @if (!string.IsNullOrEmpty(ViewBag.SearchTerm) || !string.IsNullOrEmpty(ViewBag.SelectedStatus) || !string.IsNullOrEmpty(ViewBag.SelectedCategory))
+                    @if (anyFilter)
                     {
-                        <a asp-action="Index" class="btn btn-outline-danger">
-                            <i class="fas fa-times"></i>
+                        <a asp-action="Index" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-times me-1"></i>Clear
                         </a>
                     }
                 </div>
@@ -60,6 +141,14 @@
         </form>
     </div>
 </div>
+
+@if (anyFilter && !Model.Any())
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-filter me-1"></i>
+        Nothing matches those filters. <a asp-action="Index" class="alert-link">Clear them</a> to see everything.
+    </div>
+}
 
 
 <div class="card">
