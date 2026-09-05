@@ -15,6 +15,8 @@ namespace AssetFlow.Data
 
         public DbSet<AssetRequest> AssetRequests { get; set; }
 
+        public DbSet<Notification> Notifications { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -34,6 +36,15 @@ namespace AssetFlow.Data
 
             builder.Entity<AssetRequest>()
                 .HasIndex(r => r.RequesterId);
+
+            // The bell badge counts one user's unread rows on every page load, so that
+            // is the pair worth indexing.
+            builder.Entity<Notification>()
+                .HasIndex(n => new { n.UserId, n.IsRead });
+
+            // The overdue sweep looks a notice up by its key before writing it.
+            builder.Entity<Notification>()
+                .HasIndex(n => n.SourceKey);
         }
     }
 }
