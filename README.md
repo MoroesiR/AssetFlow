@@ -167,17 +167,23 @@ Or just hit F5 in Visual Studio
 
 4. Open your browser to `https://localhost:5001`
 
-### Demo Login
-The admin account is created on first run from the `AdminUser` section in
-`appsettings.json`. For anything beyond local testing move those values into
-user secrets or environment variables.
+### Setting up the admin account
+The admin account is created on first run, but the password is **not** in this
+repository - a committed password is a committed password, even a throwaway one.
+Set it in user secrets before the first run:
 
-- **Email:** admin@gmail.com
-- **Password:** Admin@123
+```bash
+dotnet user-secrets set "AdminUser:Password" "your-password-here"
+```
+
+The email and display name come from the `AdminUser` section of
+`appsettings.json` and can be changed there. If no password is set the seeder
+creates the roles and skips the account, so nothing breaks - you just will not
+have an admin to sign in with until you set one.
 
 For the employee side, register a new account through the Register link. Anyone
-who signs up gets the Employee role - admin rights are only handed out from the
-seeder or by hand.
+who signs up gets the Employee role; admin rights only come from the seeder or
+by hand.
 
 
 ## Current Limitations & Known Issues

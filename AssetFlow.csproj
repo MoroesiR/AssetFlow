@@ -4,7 +4,17 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f2a25243-d293-46b4-a8d9-b20c89681195</UserSecretsId>
   </PropertyGroup>
+
+  <!-- The test project lives inside this folder so it travels with the repo, but the
+       web SDK globs **/*.cs, which would otherwise pull the tests into the app. -->
+  <ItemGroup>
+    <Compile Remove="AssetFlow.Tests/**" />
+    <Content Remove="AssetFlow.Tests/**" />
+    <None Remove="AssetFlow.Tests/**" />
+    <EmbeddedResource Remove="AssetFlow.Tests/**" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.2" />
