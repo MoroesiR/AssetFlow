@@ -54,53 +54,58 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - Inventory, reports, maintenance and the dashboard are admin-only
 
 **Notifications**
-- A bell in the navigation with an unread count, for both roles
-- Admin is told when a request comes in and when one is withdrawn
-- The requester is told when their request is approved or declined, with the reason
-- Overdue equipment and items due for servicing are raised automatically
-- Clicking a notification marks it read and takes you to the thing it is about
-- Mark all read, and clear the ones you have read - unread items are never dropped
+- A bell in the nav with an unread count, for both roles
+- Admin gets told when a request comes in or gets withdrawn
+- The employee gets told when their request is approved or declined, and the
+  rejection reason comes with it
+- Overdue equipment and items due for a service show up on their own
+- Clicking a notification marks it read and takes you straight to whatever it's about
+- Mark all read, or clear the ones you've read (unread ones stay put, so you can't
+  accidentally lose something you haven't looked at)
 
 **Bulk Import**
-- Add many assets at once from a CSV, with a downloadable template
-- Tick "check the file without importing" to validate first - nothing is written
-- A bad row is skipped with a reason and a line number, the rest still import
-- Duplicate serials are caught against the database and within the file itself
-- Prices are read in either convention, so R 4 250,00 and 4,250.00 both mean the same thing
+- Load a whole spreadsheet of assets at once, with a template you can download
+- Leave "check the file without importing" ticked and it just tells you what would
+  happen - nothing gets written
+- A bad row gets skipped with a reason and a line number that matches Excel, and
+  the rest still import. Importing 200 assets shouldn't cost you 199 because of one typo
+- Catches duplicate serials against the database and inside the file itself
+- Reads prices either way round, so R 4 250,00 and 4,250.00 both come out as 4250
 
 **Search and Filtering**
-- Search across name, serial, location, vendor and whoever is holding the item
-- Filter by status, category, vendor, holding department and a price range
-- Saved views for overdue, maintenance due, expired warranty and missing location
+- Search covers name, serial, location, vendor and whoever's holding the thing
+- Filter by status, category, vendor, department and a price range
+- One-click views for overdue, maintenance due, expired warranty and missing location
 - Sort by name, price or purchase date
-- Category and vendor dropdowns are built from the data, not hardcoded
+- The category and vendor dropdowns come off the data now instead of being hardcoded
 
 **Recurring Maintenance**
-- Put an asset on a schedule by setting how often it is serviced
-- Finishing a service books the next one automatically, so the cycle keeps going
-  without anybody retyping a date
-- The asset page shows the schedule, when it was last serviced and how late the
-  next one is running
-- Clearing the interval takes the asset off the schedule and cancels what it had booked
-- Due and overdue services feed the notification bell
+- Set how often something gets serviced and it goes on a schedule
+- Finishing a service books the next one, so nobody has to remember to type a date
+  in every time
+- The asset page shows the schedule, when it was last done and how late the next
+  one is running
+- Clearing the interval takes it off the schedule and cancels what was booked
+- Anything due or overdue feeds the notification bell
 
 **On a phone**
-- The inventory drops its lower-priority columns by screen width instead of
-  scrolling sideways to reach the row buttons; the serial moves under the asset name
-- The filter panel folds behind a button, and opens by itself when a filter is on
-- Row buttons meet a sensible tap target, and page actions stack instead of crowding
+- The inventory drops its less important columns as the screen narrows instead of
+  making you scroll sideways to reach the buttons - the serial moves up under the name
+- The filter panel folds away behind a button, and opens itself if a filter is on
+- Buttons are big enough to actually hit, and the page actions stack instead of
+  squashing up next to the heading
 
 **Analytics**
-- Every checkout is kept as an episode, so a returned item stays on the record
-  instead of vanishing the moment it comes back
+- Every checkout is kept now, so a returned item stays on the record instead of
+  disappearing the moment it comes back
 - Usage report: how often each asset goes out, days out, utilisation and idle time,
-  with least-used and longest-idle views so nobody has to eyeball the list
-- Checkout trends by month, returns counted in the month they came back
-- Department allocation - what each is holding now, and what it borrows over time
-- Straight-line depreciation with book value, and cost per day actually used
-- Report builder: pick your own columns and filters, view it or export it as CSV
-- The reports say how long they have been recording, so a young ledger is not
-  mistaken for a quiet inventory
+  with most-used, least-used and longest-idle views
+- Checkout trends by month, on a chart
+- Department allocation - what each one is holding now versus what it borrows overall
+- Straight-line depreciation with book value, plus what each day of use has cost
+- Report builder for picking your own columns and filters, with CSV export
+- The reports tell you how long they've been recording, so a new system doesn't get
+  mistaken for a quiet one
 
 **API Access**
 - RESTful endpoints for all major operations
@@ -193,36 +198,36 @@ back in, scheduling maintenance. Employees can now ask for equipment themselves
 instead of walking to the IT office, but nothing is self-service beyond that.
 
 **Known limitations:**
-- Notifications are in-app only. There is no mail or SMS gateway behind this, so nothing reaches you when you are signed out
-- The overdue and maintenance sweep runs when somebody opens the bell, not on a timer, so a notice appears on first visit rather than overnight
-- Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
-- A request carries the dates you need the equipment for, but approving it hands the item over there and then rather than holding it until the start date. Good enough in practice - the request queue is the booking system
-- A recurring service is booked when the previous one is completed, so an asset nobody ever marks available again will not roll forward on its own
-- The analytics only count checkouts recorded since the ledger was added. Check-in used to wipe the holder and the checkout date off the asset, so anything returned before that is gone - "never checked out" means "not since we started counting"
-- Useful life for depreciation comes from the category, not the asset. No asset has ever been asked for one individually and a field like that would sit empty
-- The API endpoints are still open - authentication on them is on the list
+- Notifications only live in the app. There's no mail or SMS gateway behind this, so nothing reaches you while you're signed out
+- The overdue and maintenance check runs when somebody opens the bell rather than on a timer, so you see a notice on your first visit instead of overnight
+- Approving one request doesn't auto-reject the others waiting on the same asset. The admin gets warned and decides - I'd rather it asked than guessed
+- A request carries the dates you need something for, but approving it hands the item over right then instead of holding it until the start date. Works fine in practice, the request queue is the booking system
+- The next service gets booked when you mark the previous one done, so if nobody ever marks an asset available again the schedule won't roll on by itself
+- The analytics only know about checkouts since I added the checkout records. Check-in used to wipe the holder and the checkout date off the asset, so anything returned before that is gone. "Never checked out" really means "not since I started keeping track"
+- Depreciation gets its useful life from the category, not the asset. Nothing has ever asked for one per item and I figured that field would just sit empty
 
 ## Future Features
 
-All three phases are built and described under Current Features. One line is
-deliberately still open, and one came off on purpose:
+All three phases are done and written up under Current Features. Two things I
+want to be straight about:
 
-### Still open
-- Email or SMS delivery for the notifications that already exist in-app.
-  There is no mail or SMS gateway behind this project and I did not want it
-  depending on somebody else's free tier staying free, so notifications are
-  in-app. The delivery side is a swap-in when there is a gateway worth using.
+**Email notifications** were on the Phase 2 list and I built them in-app instead.
+I don't have a mail gateway, and I didn't want the project quietly depending on
+somebody's free tier staying free. Wiring up delivery later is a swap-in - the
+notifications and the trigger points are already there.
 
-A separate reservation system was on the Phase 2 list. It came off: a request
-already carries the dates somebody needs equipment for, and the admin approves
-it, so building a second thing to book assets would have been the request queue
-again under another name.
+**The reservation system** came off the list. A request already carries the dates
+you need something for and the admin approves it, so a separate booking feature
+would have been the request queue again with a different name on it.
 
-### What I would do next
-- Authentication on the API endpoints, which are still open
-- A nightly job for the overdue and maintenance sweep, so notices arrive
-  overnight rather than when somebody next opens the bell
-- Let the admin set a useful life per asset where the category default is wrong
+### What I'd do next
+- Lock down or drop the remaining API surface as it grows - the assets endpoints
+  are admin-only now, anything I add needs the same
+- A nightly job for the overdue and maintenance check so notices land overnight
+  instead of when somebody opens the bell
+- Let the admin set a useful life on an asset where the category default is wrong.
+  A R35 000 laptop and a R200 mouse pad are both "IT Equipment" right now
+- More tests. 49 is a start, not a suite - the controllers have none
 
 ## What I Learned Building This
 
@@ -234,6 +239,10 @@ again under another name.
 - Bootstrap is great until you need something custom, then you're writing CSS anyway
 - Swapping IdentityUser for my own ApplicationUser halfway through the project meant touching the context, the seeder and every page that injected the old type. Next time I'll extend the user on day one
 - Hiding a nav link is not security. The role checks had to go on the controllers, and I only trusted them once I'd tried typing the admin URLs in as an employee
+- Deleting data is easy to do by accident. Check-in was setting the holder and the checkout date back to null, which felt tidy at the time and meant I had no history at all when I came to build the usage reports. Wish I'd kept a record from the start
+- Don't split a CSV on commas. My first import worked until a description had a comma in it, and then every column after it shifted one across
+- Numbers aren't the same everywhere. "R 4 250,00" and "4,250.00" are the same money, and my first parser turned the first one into 425 000 because it stripped every comma it saw
+- Writing a report is easy, making it honest is harder. My usage report was quietly claiming months of history off dates it had carried over from old records, when it had actually been running about an hour
 
 **Design decisions:**
 - Started with too many features in mind, had to scale back to get something working first
@@ -249,20 +258,42 @@ again under another name.
 - Deployment readiness - had to refactor connection strings and configurations
 - Two people can request the same laptop, and the admin can also check it out by hand while a request sits in the queue. Availability now gets re-checked at the moment of approval instead of when the request was made
 - Stopping the same request landing twice - a double click on submit was enough to do it before I added the pending-request check
+- Getting a recurring schedule to actually recur. The due date was a single field somebody had to retype after every service, so of course it never repeated. Completing the service is what books the next one now
+- Squeezing a seven-column table onto a phone. Dropping columns by priority worked better than letting the whole row scroll sideways, because the buttons were the thing you couldn't reach
+- Working out that a build failure wasn't my code at all - Windows Smart App Control had switched itself on mid-session and was blocking the compiled DLL from loading
 
 ## Project Structure
 
 ```
 AssetFlow/
 ├── Areas/Identity/      # Login and registration pages
-├── Controllers/         # MVC controllers and API endpoints
-├── Models/             # Entity models and ViewModels
-├── Views/              # Razor views for UI
-├── ViewComponents/     # Small reusable pieces (the pending request badge)
-├── Data/               # Database context, seeding and migrations
-├── wwwroot/            # Static files (CSS, JS, images)
-└── appsettings.json    # Configuration
+├── Controllers/         # MVC controllers
+│   └── Api/             # JSON endpoints (admin only)
+├── Models/              # Entity models and ViewModels
+├── Views/               # Razor views for UI
+├── ViewComponents/      # Small reusable pieces (the pending request and bell badges)
+├── Services/            # The logic that got too big for a controller - CSV reading,
+│                        # imports, notifications, the checkout ledger, analytics
+├── Data/                # Database context and seeding
+├── Migrations/          # EF migrations
+├── AssetFlow.Tests/     # xUnit tests
+├── wwwroot/             # Static files (CSS, JS, images)
+└── appsettings.json     # Configuration (no secrets - see the setup section)
 ```
+
+Anything with real logic in it moved out to `Services/` as I went. The controllers
+were getting long, and it also meant I could test that logic without spinning up a
+whole web request.
+
+## Running the Tests
+
+```bash
+cd AssetFlow.Tests
+dotnet test
+```
+
+49 tests, mostly around the CSV import and the report calculations - the two places
+I actually got things wrong.
 
 ## Why This Project Matters
 
@@ -282,7 +313,7 @@ This system could legitimately be used by a small-to-medium business IT departme
 ## Contact
 
 **Moroesi Ramodupi**
-- Email: moroesiramodupi@gmail.com
+- Email: moroesiramodupi@gmail.com / mavundlamoroesi@gmail.com
 - GitHub: [@MoroesiR](https://github.com/MoroesiR)
 - Location: Durban, South Africa
 - Currently: Junior Software Developer, open to remote opportunities
