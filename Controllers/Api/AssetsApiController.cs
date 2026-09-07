@@ -1,12 +1,21 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
 
 namespace AssetFlow.Controllers.Api
 {
+    // Read-only JSON for anything that is not a browser - a phone app, a spreadsheet
+    // pulling live figures, another system asking what somebody is holding. Nothing
+    // in this app calls it; it is here for those.
+    //
+    // It used to answer anonymously, which handed a stranger the whole inventory:
+    // serials, prices, who holds what, and their email address. Same rule as the
+    // inventory screens now - IT only.
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AssetsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
