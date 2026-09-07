@@ -5,13 +5,20 @@
     ViewData["Title"] = "Log in";
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
+@* The form sat in a bare col-md-4 with nothing centring the row, so it hugged the
+   left edge of a very wide, otherwise empty page. *@
+<div class="row justify-content-center align-items-center" style="min-height: 75vh;">
+    <div class="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
+        <div class="text-center mb-4">
+            <i class="fas fa-boxes fa-2x text-primary mb-2"></i>
+            <h1 class="h3 mb-1">Sign in to AssetFlow</h1>
+            <p class="text-muted mb-0">IT equipment tracking</p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
             <form id="account" method="post">
-                
-                <hr />
+
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
                     <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
@@ -29,22 +36,20 @@
                         @Html.DisplayNameFor(m => m.Input.RememberMe)
                     </label>
                 </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
+                <div class="d-grid mb-3">
+                    <button id="login-submit" type="submit" class="btn btn-lg btn-primary">Log in</button>
                 </div>
             </form>
-        </section>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 small">
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Create an account</a>
+            <span class="text-muted mx-2">|</span>
+            <a id="forgot-password" asp-page="./ForgotPassword">Forgot your password?</a>
+            <span class="text-muted mx-2">|</span>
+            <a id="resend-confirmation" asp-page="./ResendEmailConfirmation">Resend confirmation</a>
+        </div>
     </div>
     @* <div class="col-md-6 col-md-offset-2">
         <section>

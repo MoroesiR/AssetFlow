@@ -27,6 +27,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AssetImportService>();
 builder.Services.AddScoped<CheckoutLedger>();
+builder.Services.AddScoped<AnalyticsService>();
 
 
 builder.Services.AddEndpointsApiExplorer();

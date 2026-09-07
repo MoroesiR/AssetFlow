@@ -90,6 +90,18 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - The filter panel folds behind a button, and opens by itself when a filter is on
 - Row buttons meet a sensible tap target, and page actions stack instead of crowding
 
+**Analytics**
+- Every checkout is kept as an episode, so a returned item stays on the record
+  instead of vanishing the moment it comes back
+- Usage report: how often each asset goes out, days out, utilisation and idle time,
+  with least-used and longest-idle views so nobody has to eyeball the list
+- Checkout trends by month, returns counted in the month they came back
+- Department allocation - what each is holding now, and what it borrows over time
+- Straight-line depreciation with book value, and cost per day actually used
+- Report builder: pick your own columns and filters, view it or export it as CSV
+- The reports say how long they have been recording, so a young ledger is not
+  mistaken for a quiet inventory
+
 **API Access**
 - RESTful endpoints for all major operations
 - Swagger/OpenAPI documentation for testing
@@ -180,31 +192,31 @@ instead of walking to the IT office, but nothing is self-service beyond that.
 - Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
 - A request carries the dates you need the equipment for, but approving it hands the item over there and then rather than holding it until the start date. Good enough in practice - the request queue is the booking system
 - A recurring service is booked when the previous one is completed, so an asset nobody ever marks available again will not roll forward on its own
+- The analytics only count checkouts recorded since the ledger was added. Check-in used to wipe the holder and the checkout date off the asset, so anything returned before that is gone - "never checked out" means "not since we started counting"
+- Useful life for depreciation comes from the category, not the asset. No asset has ever been asked for one individually and a field like that would sit empty
 - The API endpoints are still open - authentication on them is on the list
 
 ## Future Features
 
-Phase 1 and Phase 2 are both done and described under Current Features. One
-line of Phase 2 is deliberately still open:
+All three phases are built and described under Current Features. One line is
+deliberately still open, and one came off on purpose:
 
-### Phase 2: what is left
+### Still open
 - Email or SMS delivery for the notifications that already exist in-app.
   There is no mail or SMS gateway behind this project and I did not want it
   depending on somebody else's free tier staying free, so notifications are
   in-app. The delivery side is a swap-in when there is a gateway worth using.
 
-A separate reservation system was also on this list. It came off: a request
-already carries the dates somebody needs equipment for, and the admin
-approves it, so building a second thing to book assets would have been the
-request queue again under another name.
+A separate reservation system was on the Phase 2 list. It came off: a request
+already carries the dates somebody needs equipment for, and the admin approves
+it, so building a second thing to book assets would have been the request queue
+again under another name.
 
-### Phase 3: Advanced Analytics
-- Usage analytics (most/least used equipment, utilization rates)
-- Department-wise asset allocation reports
-- Depreciation tracking and asset lifecycle costs
-- Checkout trends over time (monthly/quarterly graphs)
-- Custom report builder with user-defined filters
-- Equipment idle time analysis
+### What I would do next
+- Authentication on the API endpoints, which are still open
+- A nightly job for the overdue and maintenance sweep, so notices arrive
+  overnight rather than when somebody next opens the bell
+- Let the admin set a useful life per asset where the category default is wrong
 
 ## What I Learned Building This
 

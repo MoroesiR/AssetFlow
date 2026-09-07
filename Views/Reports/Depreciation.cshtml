@@ -1,0 +1,123 @@
+@model List<AssetFlow.Models.DepreciationRow>
+
+@{
+    ViewData["Title"] = "Depreciation";
+    var cost = Model.Sum(r => r.PurchasePrice);
+    var book = Model.Sum(r => r.BookValue);
+    var written = Model.Sum(r => r.AccumulatedDepreciation);
+    var done = Model.Count(r => r.FullyDepreciated);
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-0">Depreciation &amp; Lifecycle Cost</h1>
+    <p class="text-muted mb-0">What the inventory is still worth on paper</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Original cost</div>
+                <div class="h4 mb-0">@cost.ToString("C0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Written down</div>
+                <div class="h4 mb-0 text-danger">@written.ToString("C0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Book value</div>
+                <div class="h4 mb-0 text-success">@book.ToString("C0")</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Fully depreciated</div>
+                <div class="h4 mb-0">@done <small class="text-muted fs-6">of @Model.Count</small></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Asset</th>
+                    <th class="text-end d-none d-md-table-cell">Cost</th>
+                    <th class="text-end d-none d-lg-table-cell">Age</th>
+                    <th style="min-width: 140px;">Written down</th>
+                    <th class="text-end">Book value</th>
+                    <th class="text-end d-none d-lg-table-cell">Cost per day used</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Model)
+                {
+                    var pct = row.PurchasePrice <= 0
+                        ? 0
+                        : (double)Math.Round(100 * row.AccumulatedDepreciation / row.PurchasePrice, 1);
+
+                    <tr>
+                        <td>
+                            <div class="fw-medium">@row.Name</div>
+                            <small class="text-muted">
+                                @row.Category · @row.UsefulLifeYears yr life · bought @row.PurchaseDate.ToString("MMM yyyy")
+                            </small>
+                        </td>
+                        <td class="text-end d-none d-md-table-cell">@row.PurchasePrice.ToString("C0")</td>
+                        <td class="text-end d-none d-lg-table-cell">@row.AgeYears yr</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 6px; min-width: 60px;">
+                                    <div class="progress-bar @(row.FullyDepreciated ? "bg-danger" : "bg-warning")"
+                                         style="width: @pct.ToString(System.Globalization.CultureInfo.InvariantCulture)%"></div>
+                                </div>
+                                <small class="text-muted text-nowrap">@pct%</small>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            @if (row.FullyDepreciated)
+                            {
+                                <span class="badge bg-secondary">written off</span>
+                            }
+                            else
+                            {
+                                <span class="fw-medium">@row.BookValue.ToString("C0")</span>
+                            }
+                        </td>
+                        <td class="text-end d-none d-lg-table-cell">
+                            @if (row.CostPerDayUsed.HasValue)
+                            {
+                                <span>@row.CostPerDayUsed.Value.ToString("C2")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted" title="Never checked out, so there are no days to divide by">never used</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted small mt-3">
+    Straight-line depreciation. Useful life is taken from the category - IT equipment
+    3 years, AV 5, furniture 10, everything else 5 - because no asset has ever been
+    asked for one individually. Cost per day used divides what has been written off by
+    the days the item has actually been in somebody's hands, so an expensive thing
+    nobody borrows looks expensive. It only counts days since the checkout ledger
+    started.
+</p>

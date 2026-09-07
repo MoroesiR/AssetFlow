@@ -12,10 +12,59 @@ namespace AssetFlow.Controllers
     public class ReportsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AnalyticsService _analytics;
 
-        public ReportsController(ApplicationDbContext context)
+        public ReportsController(ApplicationDbContext context, AnalyticsService analytics)
         {
             _context = context;
+            _analytics = analytics;
+        }
+
+        // GET: Usage - how often each asset actually gets used, and what is sitting idle.
+        public async Task<IActionResult> Usage(string sort = "used")
+        {
+            var model = await _analytics.UsageAsync();
+
+            model.Rows = sort switch
+            {
+                "least" => model.Rows.OrderBy(r => r.TimesCheckedOut).ThenByDescending(r => r.IdleDays).ToList(),
+                "idle" => model.Rows.OrderByDescending(r => r.IdleDays).ToList(),
+                "utilisation" => model.Rows.OrderByDescending(r => r.UtilisationPercent).ToList(),
+                "value" => model.Rows.OrderByDescending(r => r.PurchasePrice).ToList(),
+                _ => model.Rows.OrderByDescending(r => r.TimesCheckedOut).ThenByDescending(r => r.DaysOut).ToList()
+            };
+
+            ViewBag.Sort = sort;
+
+            return View(model);
+        }
+
+        // GET: Departments
+        public async Task<IActionResult> Departments()
+        {
+            return View(await _analytics.ByDepartmentAsync());
+        }
+
+        // GET: Depreciation
+        public async Task<IActionResult> Depreciation()
+        {
+            return View(await _analytics.DepreciationAsync());
+        }
+
+        // GET: Trends
+        public async Task<IActionResult> Trends(int months = 12)
+        {
+            if (months < 3) { months = 3; }
+            if (months > 36) { months = 36; }
+
+            var points = await _analytics.MonthlyTrendAsync(months);
+
+            ViewBag.Months = months;
+            ViewBag.Labels = points.Select(p => p.Label).ToList();
+            ViewBag.CheckedOut = points.Select(p => p.CheckedOut).ToList();
+            ViewBag.Returned = points.Select(p => p.Returned).ToList();
+
+            return View(points);
         }
 
         // GET: AssetValue

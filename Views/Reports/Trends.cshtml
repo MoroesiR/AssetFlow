@@ -1,0 +1,145 @@
+@model List<AssetFlow.Models.MonthlyTrendPoint>
+
+@{
+    ViewData["Title"] = "Checkout Trends";
+    var months = (int)ViewBag.Months;
+    var busiest = Model.OrderByDescending(p => p.CheckedOut).FirstOrDefault();
+    var total = Model.Sum(p => p.CheckedOut);
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-0">Checkout Trends</h1>
+        <p class="text-muted mb-0">Equipment going out and coming back, by month</p>
+    </div>
+    <div class="d-flex gap-2">
+        @foreach (var m in new[] { 6, 12, 24 })
+        {
+            <a asp-action="Trends" asp-route-months="@m"
+               class="btn btn-sm @(months == m ? "btn-primary" : "btn-outline-secondary")">@m months</a>
+        }
+    </div>
+</div>
+
+@if (total == 0)
+{
+    <div class="alert alert-warning">
+        <i class="fas fa-circle-info me-1"></i>
+        No checkouts fall inside this window, so the chart is empty. Checkouts have
+        only been recorded since the ledger was added.
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <canvas id="trendChart" height="100"></canvas>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Checkouts in this window</div>
+                <div class="h3 mb-0">@total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted small">Busiest month</div>
+                <div class="h3 mb-0">
+                    @if (busiest != null && busiest.CheckedOut > 0)
+                    {
+                        <span>@busiest.Label <small class="text-muted fs-6">(@busiest.CheckedOut)</small></span>
+                    }
+                    else
+                    {
+                        <span class="text-muted fs-5">none yet</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Month</th>
+                    <th class="text-end">Checked out</th>
+                    <th class="text-end">Returned</th>
+                    <th class="text-end">Net</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    var net = p.CheckedOut - p.Returned;
+                    <tr class="@(p.CheckedOut == 0 && p.Returned == 0 ? "text-muted" : "")">
+                        <td>@p.Label</td>
+                        <td class="text-end">@p.CheckedOut</td>
+                        <td class="text-end">@p.Returned</td>
+                        <td class="text-end">
+                            @if (net > 0)
+                            {
+                                <span class="text-primary">+@net</span>
+                            }
+                            else if (net < 0)
+                            {
+                                <span class="text-success">@net</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">0</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted small mt-3">
+    Returns are counted in the month the item came back, not the month it went out,
+    so the two lines answer different questions. Net is checkouts minus returns - a
+    positive month put more equipment into the field than it took back.
+</p>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize((List<string>)ViewBag.Labels)),
+                datasets: [
+                    {
+                        label: 'Checked out',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize((List<int>)ViewBag.CheckedOut)),
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13,110,253,.1)',
+                        tension: .3,
+                        fill: true
+                    },
+                    {
+                        label: 'Returned',
+                        data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize((List<int>)ViewBag.Returned)),
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25,135,84,.08)',
+                        tension: .3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    </script>
+}
