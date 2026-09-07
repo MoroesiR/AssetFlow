@@ -18,11 +18,13 @@ namespace AssetFlow.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly AssetImportService _import;
+        private readonly CheckoutLedger _ledger;
 
-        public AssetsController(ApplicationDbContext context, AssetImportService import)
+        public AssetsController(ApplicationDbContext context, AssetImportService import, CheckoutLedger ledger)
         {
             _context = context;
             _import = import;
+            _ledger = ledger;
         }
 
         // GET: Assets
@@ -436,6 +438,9 @@ namespace AssetFlow.Controllers
                     asset.Status = "CheckedOut";
                     asset.LastUpdated = DateTime.Now;
 
+                    await _ledger.OpenAsync(asset, checkedOutToEmployee, employeeEmail,
+                        employeeDepartment, expectedReturnDate, checkoutNotes, "Manual");
+
                     _context.Update(asset);
                     await _context.SaveChangesAsync();
 
@@ -498,7 +503,11 @@ namespace AssetFlow.Controllers
                     asset.Status = requiresMaintenance ? "Maintenance" : "Available";
                     asset.LastUpdated = DateTime.Now;
 
-                  
+                    // Close the episode before the fields below are cleared - who held
+                    // it and when it went out only exist on the asset row until here.
+                    await _ledger.CloseAsync(asset.Id, conditionNotes);
+
+
                     asset.CheckedOutToEmployee = null;
                     asset.EmployeeEmail = null;
                     asset.EmployeeDepartment = null;

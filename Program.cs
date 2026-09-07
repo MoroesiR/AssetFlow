@@ -1,4 +1,4 @@
-using AssetFlow.Data;
+﻿using AssetFlow.Data;
 using AssetFlow.Models;
 using AssetFlow.Services;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +26,7 @@ builder.Services.AddRazorPages();
 // the same unit of work as the decision that caused it.
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AssetImportService>();
+builder.Services.AddScoped<CheckoutLedger>();
 
 
 builder.Services.AddEndpointsApiExplorer();
@@ -38,6 +39,10 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     await DbSeeder.SeedRolesAndAdminAsync(scope.ServiceProvider, app.Configuration);
+
+    // Assets that were already out when the ledger was added need their open episode
+    // created, otherwise every usage figure reports them as never used.
+    await CheckoutLedger.BackfillAsync(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>());
 }
 
 if (app.Environment.IsDevelopment())

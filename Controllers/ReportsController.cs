@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
+using AssetFlow.Services;
 using System.Globalization;
 
 namespace AssetFlow.Controllers
@@ -40,25 +41,34 @@ namespace AssetFlow.Controllers
         }
 
         // GET:CheckoutHistory
+        //
+        // This used to read the checkout fields on the asset row, which check-in clears,
+        // so a returned item vanished from its own history and the report only ever
+        // listed things still out. It reads the checkout ledger now, so a returned
+        // episode stays on the record.
         public async Task<IActionResult> CheckoutHistory(int? days = 30)
         {
-            var startDate = DateTime.Now.AddDays(-days.Value);
+            var window = days ?? 30;
+            var startDate = DateTime.Now.AddDays(-window);
 
-            var history = await _context.Assets
-                .Where(a => a.CheckoutDate.HasValue && a.CheckoutDate >= startDate)
-                .OrderByDescending(a => a.CheckoutDate)
-                .Select(a => new CheckoutHistoryViewModel
+            var history = await _context.CheckoutRecords
+                .Include(r => r.Asset)
+                .Where(r => r.CheckedOutOn >= startDate)
+                .OrderByDescending(r => r.CheckedOutOn)
+                .Select(r => new CheckoutHistoryViewModel
                 {
-                    AssetName = a.Name,
-                    AssetSerial = a.SerialNumber,
-                    EmployeeName = a.CheckedOutToEmployee,
-                    Department = a.EmployeeDepartment,
-                    CheckoutDate = a.CheckoutDate.Value,
-                    ExpectedReturnDate = a.ExpectedReturnDate,
-                    ActualReturnDate = a.ActualReturnDate,
-                    Status = a.Status
+                    AssetName = r.Asset != null ? r.Asset.Name : "(deleted asset)",
+                    AssetSerial = r.Asset != null ? r.Asset.SerialNumber : "",
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    CheckoutDate = r.CheckedOutOn,
+                    ExpectedReturnDate = r.DueOn,
+                    ActualReturnDate = r.ReturnedOn,
+                    Status = r.ReturnedOn == null ? "Out" : "Returned"
                 })
                 .ToListAsync();
+
+            ViewBag.Days = window;
 
             return View(history);
         }

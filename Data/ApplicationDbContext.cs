@@ -17,6 +17,8 @@ namespace AssetFlow.Data
 
         public DbSet<Notification> Notifications { get; set; }
 
+        public DbSet<CheckoutRecord> CheckoutRecords { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -45,6 +47,26 @@ namespace AssetFlow.Data
             // The overdue sweep looks a notice up by its key before writing it.
             builder.Entity<Notification>()
                 .HasIndex(n => n.SourceKey);
+
+            // Deleting an asset takes its checkout episodes with it, same as its
+            // requests. Usage figures for equipment that no longer exists are noise.
+            builder.Entity<CheckoutRecord>()
+                .HasOne(r => r.Asset)
+                .WithMany()
+                .HasForeignKey(r => r.AssetId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Closing an episode looks up the open one for an asset, and every usage
+            // report groups by asset, so this is the pair that earns an index.
+            builder.Entity<CheckoutRecord>()
+                .HasIndex(r => new { r.AssetId, r.ReturnedOn });
+
+            // The trend reports slice by when things went out.
+            builder.Entity<CheckoutRecord>()
+                .HasIndex(r => r.CheckedOutOn);
+
+            builder.Entity<CheckoutRecord>()
+                .HasIndex(r => r.Department);
         }
     }
 }
