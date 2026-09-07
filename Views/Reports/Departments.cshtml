@@ -1,0 +1,119 @@
+@model List<AssetFlow.Models.DepartmentUsageRow>
+
+@{
+    ViewData["Title"] = "Department Allocation";
+    var totalHeld = Model.Sum(r => r.CurrentlyHolding);
+    var totalValue = Model.Sum(r => r.ValueHeld);
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-0">Department Allocation</h1>
+    <p class="text-muted mb-0">Who is holding what, and who borrows most</p>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="fas fa-circle-info me-1"></i>
+        Nothing is allocated to a department yet.
+    </div>
+}
+else
+{
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Departments</div>
+                    <div class="h3 mb-0">@Model.Count</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Items out right now</div>
+                    <div class="h3 mb-0">@totalHeld</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Value in the field</div>
+                    <div class="h3 mb-0">@totalValue.ToString("C0")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <canvas id="deptChart" height="110"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th class="text-end">Holding now</th>
+                        <th class="text-end d-none d-md-table-cell">Value held</th>
+                        <th class="text-end">Checkouts</th>
+                        <th class="text-end d-none d-md-table-cell">Distinct assets</th>
+                        <th class="text-end d-none d-lg-table-cell">Avg days per checkout</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model)
+                    {
+                        <tr>
+                            <td class="fw-medium">@row.Department</td>
+                            <td class="text-end">@row.CurrentlyHolding</td>
+                            <td class="text-end d-none d-md-table-cell">@row.ValueHeld.ToString("C0")</td>
+                            <td class="text-end">@row.TotalCheckouts</td>
+                            <td class="text-end d-none d-md-table-cell">@row.DistinctAssets</td>
+                            <td class="text-end d-none d-lg-table-cell">@row.AverageDaysPerCheckout</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="text-muted small mt-3">
+        "Holding now" is a snapshot of what is signed out today. "Checkouts" counts
+        every episode on record, so a department can borrow heavily and be holding
+        nothing at the moment.
+    </p>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            new Chart(document.getElementById('deptChart'), {
+                type: 'bar',
+                data: {
+                    labels: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Select(r => r.Department))),
+                    datasets: [
+                        {
+                            label: 'Holding now',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Select(r => r.CurrentlyHolding))),
+                            backgroundColor: '#0d6efd'
+                        },
+                        {
+                            label: 'Total checkouts',
+                            data: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Select(r => r.TotalCheckouts))),
+                            backgroundColor: '#adb5bd'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        </script>
+    }
+}

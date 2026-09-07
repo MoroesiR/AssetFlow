@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using AssetFlow.Data;
 using AssetFlow.Models;
+using AssetFlow.Services;
 using System.Globalization;
 
 namespace AssetFlow.Controllers
@@ -11,10 +12,59 @@ namespace AssetFlow.Controllers
     public class ReportsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly AnalyticsService _analytics;
 
-        public ReportsController(ApplicationDbContext context)
+        public ReportsController(ApplicationDbContext context, AnalyticsService analytics)
         {
             _context = context;
+            _analytics = analytics;
+        }
+
+        // GET: Usage - how often each asset actually gets used, and what is sitting idle.
+        public async Task<IActionResult> Usage(string sort = "used")
+        {
+            var model = await _analytics.UsageAsync();
+
+            model.Rows = sort switch
+            {
+                "least" => model.Rows.OrderBy(r => r.TimesCheckedOut).ThenByDescending(r => r.IdleDays).ToList(),
+                "idle" => model.Rows.OrderByDescending(r => r.IdleDays).ToList(),
+                "utilisation" => model.Rows.OrderByDescending(r => r.UtilisationPercent).ToList(),
+                "value" => model.Rows.OrderByDescending(r => r.PurchasePrice).ToList(),
+                _ => model.Rows.OrderByDescending(r => r.TimesCheckedOut).ThenByDescending(r => r.DaysOut).ToList()
+            };
+
+            ViewBag.Sort = sort;
+
+            return View(model);
+        }
+
+        // GET: Departments
+        public async Task<IActionResult> Departments()
+        {
+            return View(await _analytics.ByDepartmentAsync());
+        }
+
+        // GET: Depreciation
+        public async Task<IActionResult> Depreciation()
+        {
+            return View(await _analytics.DepreciationAsync());
+        }
+
+        // GET: Trends
+        public async Task<IActionResult> Trends(int months = 12)
+        {
+            if (months < 3) { months = 3; }
+            if (months > 36) { months = 36; }
+
+            var points = await _analytics.MonthlyTrendAsync(months);
+
+            ViewBag.Months = months;
+            ViewBag.Labels = points.Select(p => p.Label).ToList();
+            ViewBag.CheckedOut = points.Select(p => p.CheckedOut).ToList();
+            ViewBag.Returned = points.Select(p => p.Returned).ToList();
+
+            return View(points);
         }
 
         // GET: AssetValue
@@ -40,25 +90,34 @@ namespace AssetFlow.Controllers
         }
 
         // GET:CheckoutHistory
+        //
+        // This used to read the checkout fields on the asset row, which check-in clears,
+        // so a returned item vanished from its own history and the report only ever
+        // listed things still out. It reads the checkout ledger now, so a returned
+        // episode stays on the record.
         public async Task<IActionResult> CheckoutHistory(int? days = 30)
         {
-            var startDate = DateTime.Now.AddDays(-days.Value);
+            var window = days ?? 30;
+            var startDate = DateTime.Now.AddDays(-window);
 
-            var history = await _context.Assets
-                .Where(a => a.CheckoutDate.HasValue && a.CheckoutDate >= startDate)
-                .OrderByDescending(a => a.CheckoutDate)
-                .Select(a => new CheckoutHistoryViewModel
+            var history = await _context.CheckoutRecords
+                .Include(r => r.Asset)
+                .Where(r => r.CheckedOutOn >= startDate)
+                .OrderByDescending(r => r.CheckedOutOn)
+                .Select(r => new CheckoutHistoryViewModel
                 {
-                    AssetName = a.Name,
-                    AssetSerial = a.SerialNumber,
-                    EmployeeName = a.CheckedOutToEmployee,
-                    Department = a.EmployeeDepartment,
-                    CheckoutDate = a.CheckoutDate.Value,
-                    ExpectedReturnDate = a.ExpectedReturnDate,
-                    ActualReturnDate = a.ActualReturnDate,
-                    Status = a.Status
+                    AssetName = r.Asset != null ? r.Asset.Name : "(deleted asset)",
+                    AssetSerial = r.Asset != null ? r.Asset.SerialNumber : "",
+                    EmployeeName = r.EmployeeName,
+                    Department = r.Department,
+                    CheckoutDate = r.CheckedOutOn,
+                    ExpectedReturnDate = r.DueOn,
+                    ActualReturnDate = r.ReturnedOn,
+                    Status = r.ReturnedOn == null ? "Out" : "Returned"
                 })
                 .ToListAsync();
+
+            ViewBag.Days = window;
 
             return View(history);
         }

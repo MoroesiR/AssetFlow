@@ -18,11 +18,19 @@ namespace AssetFlow.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly AssetImportService _import;
+        private readonly CheckoutLedger _ledger;
+        private readonly ILogger<AssetsController> _logger;
 
-        public AssetsController(ApplicationDbContext context, AssetImportService import)
+        public AssetsController(
+            ApplicationDbContext context,
+            AssetImportService import,
+            CheckoutLedger ledger,
+            ILogger<AssetsController> logger)
         {
             _context = context;
             _import = import;
+            _ledger = ledger;
+            _logger = logger;
         }
 
         // GET: Assets
@@ -245,31 +253,8 @@ namespace AssetFlow.Controllers
         // POST:Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Asset asset)  
+        public async Task<IActionResult> Create(Asset asset)
         {
-            Console.WriteLine($"=== CREATE FORM SUBMITTED ===");
-            Console.WriteLine($"ModelState IsValid: {ModelState.IsValid}");
-
-            if (!ModelState.IsValid)
-            {
-                Console.WriteLine("Validation Errors:");
-                foreach (var entry in ModelState)
-                {
-                    foreach (var error in entry.Value.Errors)
-                    {
-                        Console.WriteLine($"  {entry.Key}: {error.ErrorMessage}");
-                    }
-                }
-            }
-
-            Console.WriteLine($"Received Asset Data:");
-            Console.WriteLine($"  Name: {asset.Name}");
-            Console.WriteLine($"  Serial: {asset.SerialNumber}");
-            Console.WriteLine($"  Price: {asset.PurchasePrice}");
-            Console.WriteLine($"  Category: {asset.Category}");
-            Console.WriteLine($"  Status: {asset.Status}");
-            Console.WriteLine($"  Notes: {asset.Notes}");  
-
             if (ModelState.IsValid)
             {
                 try
@@ -279,13 +264,12 @@ namespace AssetFlow.Controllers
                     _context.Add(asset);
                     await _context.SaveChangesAsync();
 
-                    Console.WriteLine($"SUCCESS: Asset '{asset.Name}' saved to database!");
+                    TempData["SuccessMessage"] = $"'{asset.Name}' added to the inventory.";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"DATABASE ERROR: {ex.Message}");
-                    Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                    _logger.LogError(ex, "Failed to save new asset {Serial}", asset.SerialNumber);
                     ModelState.AddModelError("", $"Error saving asset: {ex.Message}");
                 }
             }
@@ -436,6 +420,9 @@ namespace AssetFlow.Controllers
                     asset.Status = "CheckedOut";
                     asset.LastUpdated = DateTime.Now;
 
+                    await _ledger.OpenAsync(asset, checkedOutToEmployee, employeeEmail,
+                        employeeDepartment, expectedReturnDate, checkoutNotes, "Manual");
+
                     _context.Update(asset);
                     await _context.SaveChangesAsync();
 
@@ -498,7 +485,11 @@ namespace AssetFlow.Controllers
                     asset.Status = requiresMaintenance ? "Maintenance" : "Available";
                     asset.LastUpdated = DateTime.Now;
 
-                  
+                    // Close the episode before the fields below are cleared - who held
+                    // it and when it went out only exist on the asset row until here.
+                    await _ledger.CloseAsync(asset.Id, conditionNotes);
+
+
                     asset.CheckedOutToEmployee = null;
                     asset.EmployeeEmail = null;
                     asset.EmployeeDepartment = null;

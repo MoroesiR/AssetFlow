@@ -1,0 +1,168 @@
+@model List<AssetFlow.Models.Asset>
+@using AssetFlow.Controllers
+
+@{
+    ViewData["Title"] = "Report Builder";
+    var columns = (IReadOnlyDictionary<string, (string Label, Func<AssetFlow.Models.Asset, object?> Read)>)ViewBag.Columns;
+    var chosen = (string[])ViewBag.Chosen;
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    var departments = ViewBag.Departments as List<string> ?? new List<string>();
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-0">Report Builder</h1>
+    <p class="text-muted mb-0">Pick the columns and filters you want, then export it</p>
+</div>
+
+<form method="get" asp-action="Index">
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>Columns</strong>
+            <span class="text-muted small ms-1">tick what you want to see</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                @foreach (var col in columns)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="columns"
+                                   value="@col.Key" id="col_@col.Key"
+                                   checked="@chosen.Contains(col.Key, StringComparer.OrdinalIgnoreCase)">
+                            <label class="form-check-label small" for="col_@col.Key">@col.Value.Label</label>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Filters</strong></div>
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">Any</option>
+                        @foreach (var s in new[] { "Available", "CheckedOut", "Maintenance", "Retired" })
+                        {
+                            <option value="@s" selected="@(ViewBag.SelectedStatus as string == s)">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Category</label>
+                    <select name="category" class="form-select form-select-sm">
+                        <option value="">Any</option>
+                        @foreach (var c in categories)
+                        {
+                            <option value="@c" selected="@(ViewBag.SelectedCategory as string == c)">@c</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Department</label>
+                    <select name="department" class="form-select form-select-sm">
+                        <option value="">Any</option>
+                        @foreach (var d in departments)
+                        {
+                            <option value="@d" selected="@(ViewBag.SelectedDepartment as string == d)">@d</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Only show</label>
+                    <select name="flag" class="form-select form-select-sm">
+                        <option value="">Everything</option>
+                        <option value="Overdue" selected="@(ViewBag.SelectedFlag as string == "Overdue")">Overdue</option>
+                        <option value="MaintenanceDue" selected="@(ViewBag.SelectedFlag as string == "MaintenanceDue")">Maintenance due</option>
+                        <option value="WarrantyExpired" selected="@(ViewBag.SelectedFlag as string == "WarrantyExpired")">Warranty expired</option>
+                        <option value="NoLocation" selected="@(ViewBag.SelectedFlag as string == "NoLocation")">No location</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Price from</label>
+                    <input type="number" step="0.01" name="minPrice" class="form-control form-control-sm" value="@ViewBag.MinPrice">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Price to</label>
+                    <input type="number" step="0.01" name="maxPrice" class="form-control form-control-sm" value="@ViewBag.MaxPrice">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Bought after</label>
+                    <input type="date" name="purchasedFrom" class="form-control form-control-sm"
+                           value="@(((DateTime?)ViewBag.PurchasedFrom)?.ToString("yyyy-MM-dd"))">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Bought before</label>
+                    <input type="date" name="purchasedTo" class="form-control form-control-sm"
+                           value="@(((DateTime?)ViewBag.PurchasedTo)?.ToString("yyyy-MM-dd"))">
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted mb-1">Sort by</label>
+                    <select name="sort" class="form-select form-select-sm">
+                        <option value="">Name</option>
+                        <option value="category" selected="@(ViewBag.SelectedSort as string == "category")">Category</option>
+                        <option value="price_desc" selected="@(ViewBag.SelectedSort as string == "price_desc")">Price, high first</option>
+                        <option value="price" selected="@(ViewBag.SelectedSort as string == "price")">Price, low first</option>
+                        <option value="purchased_desc" selected="@(ViewBag.SelectedSort as string == "purchased_desc")">Newest purchase</option>
+                        <option value="purchased" selected="@(ViewBag.SelectedSort as string == "purchased")">Oldest purchase</option>
+                    </select>
+                </div>
+                <div class="col-md-9 d-flex flex-wrap gap-2 justify-content-md-end">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-play me-1"></i>Run report
+                    </button>
+                    <button type="submit" name="export" value="csv" class="btn btn-outline-success btn-sm">
+                        <i class="fas fa-file-csv me-1"></i>Export CSV
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Reset</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>@Model.Count row(s)</strong>
+        <small class="text-muted">@chosen.Length column(s)</small>
+    </div>
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        @foreach (var key in chosen)
+                        {
+                            <th>@columns[key].Label</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var asset in Model)
+                    {
+                        <tr>
+                            @foreach (var key in chosen)
+                            {
+                                <td>@ReportBuilderController.Format(columns[key].Read(asset))</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="card-body text-center py-5">
+            <i class="fas fa-filter fa-2x text-muted mb-3"></i>
+            <h5>Nothing matches</h5>
+            <p class="text-muted mb-0">Loosen the filters and run it again.</p>
+        </div>
+    }
+</div>

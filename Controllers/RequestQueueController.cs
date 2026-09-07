@@ -18,11 +18,16 @@ namespace AssetFlow.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly NotificationService _notifications;
+        private readonly CheckoutLedger _ledger;
 
-        public RequestQueueController(ApplicationDbContext context, NotificationService notifications)
+        public RequestQueueController(
+            ApplicationDbContext context,
+            NotificationService notifications,
+            CheckoutLedger ledger)
         {
             _context = context;
             _notifications = notifications;
+            _ledger = ledger;
         }
 
         // GET: RequestQueue
@@ -154,6 +159,12 @@ namespace AssetFlow.Controllers
                 request.ReviewedOn = DateTime.Now;
                 request.ReviewedBy = User.Identity?.Name;
                 request.ReviewNotes = reviewNotes;
+
+                // Approving is a handover, so it opens a checkout episode the same way
+                // the manual screen does. Tagged to the request it came from.
+                await _ledger.OpenAsync(asset, request.RequesterName, request.RequesterEmail,
+                    request.RequesterDepartment, expectedReturnDate, request.Reason,
+                    "Request", request.Id);
 
                 await _context.SaveChangesAsync();
 
