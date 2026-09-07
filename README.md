@@ -75,6 +75,21 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 - Sort by name, price or purchase date
 - Category and vendor dropdowns are built from the data, not hardcoded
 
+**Recurring Maintenance**
+- Put an asset on a schedule by setting how often it is serviced
+- Finishing a service books the next one automatically, so the cycle keeps going
+  without anybody retyping a date
+- The asset page shows the schedule, when it was last serviced and how late the
+  next one is running
+- Clearing the interval takes the asset off the schedule and cancels what it had booked
+- Due and overdue services feed the notification bell
+
+**On a phone**
+- The inventory drops its lower-priority columns by screen width instead of
+  scrolling sideways to reach the row buttons; the serial moves under the asset name
+- The filter panel folds behind a button, and opens by itself when a filter is on
+- Row buttons meet a sensible tap target, and page actions stack instead of crowding
+
 **API Access**
 - RESTful endpoints for all major operations
 - Swagger/OpenAPI documentation for testing
@@ -164,21 +179,21 @@ instead of walking to the IT office, but nothing is self-service beyond that.
 - The overdue and maintenance sweep runs when somebody opens the bell, not on a timer, so a notice appears on first visit rather than overnight
 - Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
 - A request carries the dates you need the equipment for, but approving it hands the item over there and then rather than holding it until the start date. Good enough in practice - the request queue is the booking system
-- Maintenance schedule doesn't auto-generate recurring tasks
+- A recurring service is booked when the previous one is completed, so an asset nobody ever marks available again will not roll forward on its own
 - The API endpoints are still open - authentication on them is on the list
 
 ## Future Features
 
-Phase 1 (the multi-role request system) is done and described under Current
-Features, along with most of Phase 2 - notifications, bulk import and the
-search work. These are what is left:
+Phase 1 and Phase 2 are both done and described under Current Features. One
+line of Phase 2 is deliberately still open:
 
-### Phase 2: Enhanced Features
-- Email or SMS delivery for the notifications that already exist in-app
-- Recurring maintenance schedules
-- Mobile-responsive improvements
+### Phase 2: what is left
+- Email or SMS delivery for the notifications that already exist in-app.
+  There is no mail or SMS gateway behind this project and I did not want it
+  depending on somebody else's free tier staying free, so notifications are
+  in-app. The delivery side is a swap-in when there is a gateway worth using.
 
-A separate reservation system was on this list. It came off: a request
+A separate reservation system was also on this list. It came off: a request
 already carries the dates somebody needs equipment for, and the admin
 approves it, so building a second thing to book assets would have been the
 request queue again under another name.

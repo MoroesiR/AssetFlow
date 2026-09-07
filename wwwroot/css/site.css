@@ -265,6 +265,54 @@ body {
     .table-responsive {
         font-size: 12px;
     }
+
+    /* 12px cells were leaving the row buttons too small to hit accurately. Bootstrap's
+       btn-group-sm plus that font size lands well under the ~44px a thumb needs. */
+    .table td .btn,
+    .table th .btn {
+        min-width: 38px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Page headings carry a heading plus two or three buttons. Below sm those go
+       full width and stack rather than crowding onto one line. */
+    .btn-sm-block {
+        width: 100%;
+    }
+
+    /* Long serials and asset names were forcing the table wider than the screen even
+       with the responsive wrapper, so the whole row scrolled sideways. */
+    .table td,
+    .table th {
+        word-break: break-word;
+    }
+
+    /* The dashboard stat cards were three-up and unreadable on a phone. */
+    .stat-card .h2,
+    .stat-card .h3 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Anything narrower than a small phone in landscape. */
+@media (max-width: 575.98px) {
+    h1.h3 {
+        font-size: 1.25rem;
+    }
+
+    .card-header h4,
+    .card-header h5 {
+        font-size: 1.05rem;
+    }
+
+    /* Modal and card footers put Cancel and Save side by side, which at this width
+       leaves each about forty pixels wide. */
+    .d-flex.justify-content-between > .btn {
+        flex: 1 1 auto;
+    }
 }
 
 

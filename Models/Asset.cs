@@ -92,6 +92,37 @@ namespace AssetFlow.Models
         [StringLength(500)]
         public string? MaintenanceNotes { get; set; }
 
+        // How often this item is serviced. Set it once and finishing a service books
+        // the next one, instead of somebody having to remember to type a date every
+        // time. Null means the asset is not on a schedule and nothing gets booked.
+        [Range(1, 3650, ErrorMessage = "A service interval is between 1 and 3650 days")]
+        [Display(Name = "Service Every (days)")]
+        public int? MaintenanceIntervalDays { get; set; }
+
+        [NotMapped]
+        public bool IsOnMaintenanceSchedule
+        {
+            get
+            {
+                return MaintenanceIntervalDays.HasValue && MaintenanceIntervalDays.Value > 0;
+            }
+        }
+
+        // Days until the next service falls due. Negative means it is already late.
+        [NotMapped]
+        public int? DaysUntilMaintenance
+        {
+            get
+            {
+                if (!NextMaintenanceDue.HasValue)
+                {
+                    return null;
+                }
+
+                return (NextMaintenanceDue.Value.Date - DateTime.Today).Days;
+            }
+        }
+
         [NotMapped]
         public bool IsMaintenanceDue
         {

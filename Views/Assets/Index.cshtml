@@ -4,21 +4,22 @@
     ViewData["Title"] = "Assets Inventory";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+@* Wraps instead of squashing once the three buttons stop fitting beside the heading. *@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <div>
         <h1 class="h3 mb-0">Assets Inventory</h1>
         <p class="text-muted mb-0">
             Showing @Model.Count() of @ViewBag.TotalAssets assets registered
         </p>
     </div>
-    <div>
-        <a asp-action="Create" class="btn btn-primary">
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" class="btn btn-primary btn-sm-block">
             <i class="fas fa-plus me-1"></i>Add Asset
         </a>
-        <a asp-action="Import" class="btn btn-outline-primary">
+        <a asp-action="Import" class="btn btn-outline-primary btn-sm-block">
             <i class="fas fa-file-import me-1"></i>Import CSV
         </a>
-        <button class="btn btn-outline-secondary" onclick="window.print()">
+        <button class="btn btn-outline-secondary btn-sm-block d-none d-sm-inline-block" onclick="window.print()">
             <i class="fas fa-print me-1"></i>Print
         </button>
     </div>
@@ -42,6 +43,21 @@
 }
 
 <div class="card mb-3">
+    @* Ten fields is a long scroll before you reach the table on a phone, so below md
+       the panel folds away behind a button. Above md it is always open and the
+       toggle is not rendered at all. *@
+    <div class="card-header d-md-none py-2">
+        <button class="btn btn-sm btn-outline-secondary w-100" type="button"
+                data-bs-toggle="collapse" data-bs-target="#filterPanel"
+                aria-expanded="@(anyFilter ? "true" : "false")" aria-controls="filterPanel">
+            <i class="fas fa-sliders-h me-1"></i>Search and filters
+            @if (anyFilter)
+            {
+                <span class="badge bg-primary ms-1">on</span>
+            }
+        </button>
+    </div>
+    <div class="collapse d-md-block @(anyFilter ? "show" : "")" id="filterPanel">
     <div class="card-body py-3">
         <form method="get" asp-action="Index">
             <div class="row g-2 align-items-end">
@@ -126,7 +142,7 @@
                         <option value="NoLocation" selected="@(flag == "NoLocation")">No location set</option>
                     </select>
                 </div>
-                <div class="col-md-3 text-end">
+                <div class="col-md-3 text-md-end d-grid d-md-block gap-2">
                     <button class="btn btn-primary btn-sm" type="submit">
                         <i class="fas fa-search me-1"></i>Apply
                     </button>
@@ -139,6 +155,7 @@
                 </div>
             </div>
         </form>
+    </div>
     </div>
 </div>
 
@@ -157,12 +174,15 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
+                        @* Asset, status and the buttons are the three that survive on a
+                           phone. The rest drop out by width rather than forcing a
+                           sideways scroll to reach the actions. *@
                         <th style="width: 30%">Asset</th>
-                        <th>Serial</th>
-                        <th>Category</th>
+                        <th class="d-none d-lg-table-cell">Serial</th>
+                        <th class="d-none d-xl-table-cell">Category</th>
                         <th>Status</th>
-                        <th>Value</th>
-                        <th>Last Updated</th>
+                        <th class="d-none d-md-table-cell">Value</th>
+                        <th class="d-none d-xl-table-cell">Last Updated</th>
                         <th class="text-end" style="width: 120px;">Actions</th>
                     </tr>
                 </thead>
@@ -189,13 +209,18 @@
                                     <div>
                                         <div class="fw-medium">@item.Name</div>
                                         <small class="text-muted">@item.Location</small>
+                                        @* The serial column is gone below lg, so it rides
+                                           along here rather than being unreachable. *@
+                                        <div class="d-lg-none">
+                                            <code class="text-muted small">@item.SerialNumber</code>
+                                        </div>
                                     </div>
                                 </div>
                             </td>
-                            <td>
+                            <td class="d-none d-lg-table-cell">
                                 <code class="text-muted">@item.SerialNumber</code>
                             </td>
-                            <td>
+                            <td class="d-none d-xl-table-cell">
                                 <span class="badge bg-light text-dark">@item.Category</span>
                             </td>
                             <td>
@@ -210,9 +235,9 @@
                                 }
                                 <span class="@statusClass">@item.Status</span>
                             </td>
-                            <td class="fw-medium">@item.PurchasePrice.ToString("C")</td>
-                            <td>
-                                <small class="text-muted">@item.LastUpdated.ToString("MM/dd/yy")</small>
+                            <td class="fw-medium d-none d-md-table-cell">@item.PurchasePrice.ToString("C")</td>
+                            <td class="d-none d-xl-table-cell">
+                                <small class="text-muted">@item.LastUpdated.ToString("dd MMM yy")</small>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">

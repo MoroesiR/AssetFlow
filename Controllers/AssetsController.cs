@@ -541,7 +541,7 @@ namespace AssetFlow.Controllers
         // POST: MarkMaintenance
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarkMaintenance(int id, DateTime? nextMaintenanceDue, string? maintenanceNotes)
+        public async Task<IActionResult> MarkMaintenance(int id, DateTime? nextMaintenanceDue, string? maintenanceNotes, int? maintenanceIntervalDays)
         {
             var asset = await _context.Assets.FindAsync(id);
             if (asset == null)
@@ -549,17 +549,34 @@ namespace AssetFlow.Controllers
                 return NotFound();
             }
 
+            if (maintenanceIntervalDays.HasValue && (maintenanceIntervalDays < 1 || maintenanceIntervalDays > 3650))
+            {
+                TempData["ErrorMessage"] = "A service interval is between 1 and 3650 days.";
+                return RedirectToAction(nameof(MarkMaintenance), new { id });
+            }
+
             try
             {
                 asset.Status = "Maintenance";
                 asset.RequiresMaintenance = true;
-                asset.LastMaintenanceDate = DateTime.Now; 
-                asset.MaintenanceNotes = maintenanceNotes; 
+                asset.LastMaintenanceDate = DateTime.Now;
+                asset.MaintenanceNotes = maintenanceNotes;
                 asset.LastUpdated = DateTime.Now;
+
+                // Blank clears the schedule, so an asset can be taken off recurring
+                // servicing without having to edit it somewhere else.
+                asset.MaintenanceIntervalDays = maintenanceIntervalDays;
 
                 if (nextMaintenanceDue.HasValue)
                 {
                     asset.NextMaintenanceDue = nextMaintenanceDue;
+                }
+                else if (!maintenanceIntervalDays.HasValue)
+                {
+                    // Off the schedule with no date typed in means nothing is booked.
+                    // Leaving the date the old schedule had put there would fire a
+                    // maintenance notice for an asset nobody is servicing any more.
+                    asset.NextMaintenanceDue = null;
                 }
 
                 _context.Update(asset);
@@ -592,10 +609,35 @@ namespace AssetFlow.Controllers
                 asset.RequiresMaintenance = false;
                 asset.LastUpdated = DateTime.Now;
 
+                // Coming out of maintenance is the moment the service is finished, so
+                // this is where the clock resets and the next one gets booked. Without
+                // it the schedule was a single date somebody had to retype every time,
+                // which is why nothing ever recurred.
+                var completed = DateTime.Now;
+                asset.LastMaintenanceDate = completed;
+
+                var scheduled = false;
+
+                if (asset.IsOnMaintenanceSchedule)
+                {
+                    asset.NextMaintenanceDue = completed.Date.AddDays(asset.MaintenanceIntervalDays!.Value);
+                    scheduled = true;
+                }
+                else if (asset.NextMaintenanceDue.HasValue && asset.NextMaintenanceDue.Value.Date <= completed.Date)
+                {
+                    // Not on a schedule, but the due date that triggered this service is
+                    // now in the past. Leaving it there would keep raising the notice
+                    // every day forever.
+                    asset.NextMaintenanceDue = null;
+                }
+
                 _context.Update(asset);
                 await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Asset '{asset.Name}' marked as available";
+                TempData["SuccessMessage"] = scheduled
+                    ? $"Asset '{asset.Name}' is available again. Next service booked for {asset.NextMaintenanceDue:dd MMM yyyy}."
+                    : $"Asset '{asset.Name}' marked as available";
+
                 return RedirectToAction(nameof(Details), new { id });
             }
             catch (Exception ex)
