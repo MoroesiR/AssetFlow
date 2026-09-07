@@ -163,20 +163,25 @@ instead of walking to the IT office, but nothing is self-service beyond that.
 - Notifications are in-app only. There is no mail or SMS gateway behind this, so nothing reaches you when you are signed out
 - The overdue and maintenance sweep runs when somebody opens the bell, not on a timer, so a notice appears on first visit rather than overnight
 - Approving one request does not automatically reject the others waiting on the same asset - the admin is warned and decides
-- Can't reserve equipment in advance
+- A request carries the dates you need the equipment for, but approving it hands the item over there and then rather than holding it until the start date. Good enough in practice - the request queue is the booking system
 - Maintenance schedule doesn't auto-generate recurring tasks
 - The API endpoints are still open - authentication on them is on the list
 
 ## Future Features
 
 Phase 1 (the multi-role request system) is done and described under Current
-Features. These are next:
+Features, along with most of Phase 2 - notifications, bulk import and the
+search work. These are what is left:
 
 ### Phase 2: Enhanced Features
 - Email or SMS delivery for the notifications that already exist in-app
-- Equipment reservation system (book for future dates)
 - Recurring maintenance schedules
 - Mobile-responsive improvements
+
+A separate reservation system was on this list. It came off: a request
+already carries the dates somebody needs equipment for, and the admin
+approves it, so building a second thing to book assets would have been the
+request queue again under another name.
 
 ### Phase 3: Advanced Analytics
 - Usage analytics (most/least used equipment, utilization rates)
