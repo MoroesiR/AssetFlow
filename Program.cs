@@ -25,6 +25,7 @@ builder.Services.AddRazorPages();
 // Scoped so it shares the request's DbContext - a notification has to be written by
 // the same unit of work as the decision that caused it.
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AssetImportService>();
 
 
 builder.Services.AddEndpointsApiExplorer();

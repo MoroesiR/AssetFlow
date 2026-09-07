@@ -158,11 +158,12 @@
             }
 
             
-            @if (!string.IsNullOrEmpty(Model.ConditionNotes) || Model.RequiresMaintenance)
+            @if (!string.IsNullOrEmpty(Model.ConditionNotes) || Model.RequiresMaintenance
+                 || Model.IsOnMaintenanceSchedule || Model.NextMaintenanceDue.HasValue)
             {
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Condition & Maintenance</h5>
+                        <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Condition &amp; Maintenance</h5>
                     </div>
                     <div class="card-body">
                         @if (Model.RequiresMaintenance)
@@ -171,6 +172,61 @@
                                 <i class="fas fa-exclamation-triangle me-2"></i>
                                 <strong>This asset requires maintenance</strong>
                             </div>
+                        }
+
+                        @if (Model.IsOnMaintenanceSchedule || Model.NextMaintenanceDue.HasValue)
+                        {
+                            <div class="row g-3 mb-3">
+                                <div class="col-sm-4">
+                                    <dt class="small text-muted">Schedule</dt>
+                                    <dd class="mb-0">
+                                        @if (Model.IsOnMaintenanceSchedule)
+                                        {
+                                            <span>Every @Model.MaintenanceIntervalDays day(s)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">One-off</span>
+                                        }
+                                    </dd>
+                                </div>
+                                <div class="col-sm-4">
+                                    <dt class="small text-muted">Last serviced</dt>
+                                    <dd class="mb-0">
+                                        @(Model.LastMaintenanceDate.HasValue
+                                            ? Model.LastMaintenanceDate.Value.ToString("dd MMM yyyy")
+                                            : "Never")
+                                    </dd>
+                                </div>
+                                <div class="col-sm-4">
+                                    <dt class="small text-muted">Next due</dt>
+                                    <dd class="mb-0">
+                                        @if (Model.NextMaintenanceDue.HasValue)
+                                        {
+                                            var days = Model.DaysUntilMaintenance ?? 0;
+                                            <span>@Model.NextMaintenanceDue.Value.ToString("dd MMM yyyy")</span>
+                                            @if (days < 0)
+                                            {
+                                                <span class="badge bg-danger ms-1">@(-days) day(s) late</span>
+                                            }
+                                            else if (days <= 14)
+                                            {
+                                                <span class="badge bg-warning text-dark ms-1">in @days day(s)</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Not booked</span>
+                                        }
+                                    </dd>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.MaintenanceNotes))
+                        {
+                            <dt>Maintenance Notes</dt>
+                            <dd class="p-3 bg-light rounded mb-3">@Model.MaintenanceNotes</dd>
                         }
 
                         @if (!string.IsNullOrEmpty(Model.ConditionNotes))
