@@ -2,7 +2,7 @@
 
 A web-based system for tracking IT equipment, managing checkouts, and scheduling maintenance. Built with ASP.NET Core MVC as part of my journey learning full-stack development.
 
-<img width="1867" height="907" alt="image" src="https://github.com/user-attachments/assets/88d0fed0-9ebc-4274-bda1-82132c7a6489" />
+![The AssetFlow dashboard, showing asset counts, value by category and checkout activity](docs/screenshots/dashboard.png)
 
 
 ## Why I Built This
@@ -115,23 +115,62 @@ This project helped me learn ASP.NET Core while solving a real problem. Every fe
 
 ## Screenshots
 
-- Home page with quick actions
-  <img width="1867" height="907" alt="image" src="https://github.com/user-attachments/assets/124cc937-be8b-49ab-864b-bd6008ba9a23" />
+### Requesting equipment
 
-- Dashboard with charts
-  <img width="1869" height="901" alt="image" src="https://github.com/user-attachments/assets/496d1bc8-f2b1-44aa-a9d9-074f27b64d19" />
+An employee sees only what is available and what they have asked for. Everything
+else in the system is admin-only.
 
-  <img width="1885" height="724" alt="Screenshot 2026-02-16 090155" src="https://github.com/user-attachments/assets/d500535a-e46f-46d7-9e30-15b0bd437d1e" />
+![Browsing available equipment as an employee](docs/screenshots/requests-browse.png)
 
+*Browse what is available.*
 
-- Assets inventory view
-  <img width="1844" height="903" alt="image" src="https://github.com/user-attachments/assets/d9e90e8d-0fa7-41d1-89d9-ff6cbe349ebf" />
+![The request form, with dates and a reason](docs/screenshots/request-create.png)
 
-- Maintenance schedule with overdue items
-  <img width="1862" height="676" alt="Screenshot 2026-02-16 085410" src="https://github.com/user-attachments/assets/260c2825-52ee-4636-b262-dfedb593fd6f" />
+*Ask for it, with the dates it is needed and a reason.*
 
-- API documentation page
-  <img width="1855" height="846" alt="image" src="https://github.com/user-attachments/assets/3c7f46db-af2a-4ae9-b396-536ff327cc65" />
+![An employee's request list showing approved, rejected and pending requests](docs/screenshots/my-requests.png)
+
+*Follow it. A rejection carries the reason it was turned down, and a pending
+request can still be cancelled.*
+
+### Deciding on it
+
+![The admin request queue with the pending count in the navigation](docs/screenshots/request-queue.png)
+
+*The admin queue, oldest first, with a live count in the navigation.*
+
+![Approving a request](docs/screenshots/request-approve.png)
+
+*Approving checks the asset out to the requester in one step, so the queue and
+the inventory cannot disagree.*
+
+![The notifications list](docs/screenshots/notifications.png)
+
+*Both sides get told. Clicking a notification marks it read and opens whatever
+it refers to.*
+
+### Running the register
+
+![The home page with quick actions](docs/screenshots/home.png)
+
+*Home, with the actions an admin reaches for most.*
+
+![The dashboard with asset value and checkout charts](docs/screenshots/dashboard.png)
+
+*Live counts, asset value by category and checkout trends, with CSV export.*
+
+![The asset inventory list](docs/screenshots/assets.png)
+
+*The inventory: what is owned, where it is and what state it is in.*
+
+![The maintenance schedule showing overdue items](docs/screenshots/maintenance.png)
+
+*Maintenance, colour-coded by urgency. Anything overdue feeds the notification
+bell.*
+
+![The Swagger API documentation page](docs/screenshots/api-docs.png)
+
+*The REST API, documented with Swagger so another system can read the register.*
 
 
 ## Tech Stack
